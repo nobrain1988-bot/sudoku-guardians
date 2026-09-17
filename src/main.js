@@ -1,10 +1,11 @@
 import './style.css';
 import { audio } from './audio.js';
-import { hideBanner, initAds, showBanner, showInterstitialOnExit } from './lib/ads.js';
+import { hideBanner, initAds, showBanner, showInterstitialOnExit, showRewarded } from './lib/ads.js';
 import { BOXES, PEERS, boxOf, colOf, rowOf } from './core/sudoku.js';
 import { CREATURES, artPath, creatureById, creatureProgress, paintPlaceholder } from './creatures.js';
 import { LANGS, detectLang, explain, t } from './i18n.js';
 import {
+  MAX_MISTAKES,
   TECHNIQUE_KEYS,
   activeCreature,
   chooseCreature,
@@ -410,7 +411,11 @@ function renderPad() {
 
 function renderStatus() {
   const game = state.game;
-  $('[data-mistakes]').textContent = String(game.mistakes);
+  const left = game.chancesLeft();
+  const chances = $('[data-chances]');
+  chances.textContent = game.practice ? t(state.lang, 'practiceRun') : '●'.repeat(left) + '○'.repeat(MAX_MISTAKES - left);
+  chances.classList.toggle('chances--low', !game.practice && left === 1);
+  chances.classList.toggle('chances--practice', game.practice);
   $('[data-hints]').textContent = `${techniqueCount(readStats())}/${TECHNIQUE_KEYS.length}`;
   $('[data-game-difficulty]').textContent = game.daily
     ? t(state.lang, 'dailyChallenge')
@@ -601,7 +606,9 @@ function finish() {
     audio.play('win');
     $('[data-win-time]').textContent = $('[data-timer]').textContent;
     $('[data-win-mistakes]').textContent = String(game.mistakes);
-    $('[data-win-note]').textContent = t(state.lang, 'winNote')(score, game.mistakes);
+    $('[data-win-note]').textContent = game.practice
+      ? t(state.lang, 'practiceNote')
+      : t(state.lang, 'winNote')(score, game.mistakes);
 
     const leveledUp = award.after.level > award.before.level;
     $('[data-xp-gain]').textContent = `+${award.gained} XP`;
@@ -663,7 +670,41 @@ function pressDigit(digit) {
   closeCoach();
   renderAll();
   if (!state.notesMode && !result.cleared) animateMove(cell, result);
+  if (result.outOfChances) {
+    // 흔들림이 끝난 뒤에 띄운다. 틀린 칸을 본 다음에 안내가 와야 납득이 된다.
+    setTimeout(openOutOfChances, 420);
+    return;
+  }
   afterMove();
+}
+
+function openOutOfChances() {
+  const over = $('[data-over]');
+  // 광고를 이미 한 번 쓴 판이면 되살리기를 제안하지 않는다 — 판당 한 번뿐이다.
+  $('[data-action="reviveAd"]').hidden = state.game.revived;
+  over.hidden = false;
+  state.paused = true;
+  audio.play('wrong');
+}
+
+function closeOutOfChances() {
+  $('[data-over]').hidden = true;
+  state.paused = false;
+}
+
+async function reviveWithAd() {
+  const rewarded = await showRewarded();
+  if (!rewarded) {
+    // 광고가 안 뜨거나 중간에 닫은 경우. 막다른 길로 몰지 않는다 — 화면은 그대로 두고
+    // '연습으로 계속'을 선택할 수 있게 남겨 둔다.
+    $('[data-action="reviveAd"]').hidden = true;
+    return;
+  }
+  state.game.revive();
+  closeOutOfChances();
+  renderAll();
+  saveGame(state.game);
+  audio.play('levelUp');
 }
 
 /* ---------- events ---------- */
@@ -765,6 +806,13 @@ function bindEvents() {
       const stats = readStats();
       if (stats.creature) show('home');
       else openPicker();
+    }
+    if (action === 'reviveAd') reviveWithAd();
+    if (action === 'practiceMode') {
+      game.enterPractice();
+      closeOutOfChances();
+      renderAll();
+      saveGame(game);
     }
     if (action === 'companion' && canSwapCompanion(readStats())) openPicker();
     if (action === 'confirmPick' && state.pick) {

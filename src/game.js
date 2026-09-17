@@ -7,6 +7,11 @@ const SAVE_KEY = 'sc.save';
 const STATS_KEY = 'sc.stats';
 
 const TARGET_SECONDS = { easy: 360, medium: 720, hard: 1200, expert: 1800 };
+
+// 한 판에 허용하는 실수. 다 쓰면 광고를 보고 한 번 되살릴 수 있고,
+// 거절하면 '연습'으로 계속 푼다 — 판을 날리지는 않는다.
+// 20분 푼 판을 인질로 잡으면 광고는 봐도 앱을 미워하게 된다.
+export const MAX_MISTAKES = 3;
 const XP_BASE = { easy: 28, medium: 45, hard: 65, expert: 85 };
 
 export const TECHNIQUE_KEYS = [
@@ -50,6 +55,8 @@ export class Game {
     this.mistakes = data.mistakes ?? 0;
     this.hints = data.hints ?? 0;
     this.elapsed = data.elapsed ?? 0;
+    this.revived = data.revived ?? false;
+    this.practice = data.practice ?? false;
     this.history = [];
     this.selected = null;
   }
@@ -95,7 +102,7 @@ export class Game {
     const wrong = digit !== this.solution[cell];
     if (wrong) {
       this.mistakes++;
-      return { changed: true, wrong };
+      return { changed: true, wrong, outOfChances: this.chancesLeft() === 0 && !this.practice };
     }
     this.#clearPeerNotes(cell, digit);
     return { changed: true, wrong: false, completed: this.#completedUnitsAt(cell) };
@@ -149,7 +156,25 @@ export class Game {
     return step ? { step } : { error: 'done' };
   }
 
+  chancesLeft() {
+    return Math.max(0, MAX_MISTAKES - this.mistakes);
+  }
+
+  // 광고를 보고 기회를 되찾는다. 판당 한 번뿐 — 무한 부활이면 긴장이 사라진다.
+  revive() {
+    if (this.revived) return false;
+    this.revived = true;
+    this.mistakes = 0;
+    return true;
+  }
+
+  // 광고를 거절했을 때. 계속 풀 수는 있지만 점수와 XP 는 없다.
+  enterPractice() {
+    this.practice = true;
+  }
+
   score() {
+    if (this.practice) return 0;
     const target = TARGET_SECONDS[this.difficulty] ?? 720;
     const seconds = Math.max(1, Math.round(this.elapsed / 1000));
     const speed = Math.min(1, target / seconds) * 60;
@@ -169,6 +194,8 @@ export class Game {
       mistakes: this.mistakes,
       hints: this.hints,
       elapsed: this.elapsed,
+      revived: this.revived,
+      practice: this.practice,
     };
   }
 }
@@ -245,7 +272,10 @@ export function recordWin(game, dateKey) {
     stats.dailyDone = dateKey;
   }
 
-  const gained = Math.round(XP_BASE[game.difficulty] * (0.6 + (0.4 * game.score()) / 100) * (game.daily ? 1.5 : 1));
+  // 연습으로 마친 판은 보상이 없다. 광고를 거절했을 때 잃는 것은 시간이 아니라 보상이다.
+  const gained = game.practice
+    ? 0
+    : Math.round(XP_BASE[game.difficulty] * (0.6 + (0.4 * game.score()) / 100) * (game.daily ? 1.5 : 1));
   const xpBefore = stats.xp;
   stats.xp += gained;
 

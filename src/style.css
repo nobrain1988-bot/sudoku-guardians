@@ -871,6 +871,104 @@ button {
   font-variant-numeric: tabular-nums;
 }
 
+.chances {
+  letter-spacing: 1.5px;
+  font-size: 12px;
+}
+
+.chances--low {
+  color: var(--wrong);
+}
+
+.chances--practice {
+  letter-spacing: 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---------- 기회 소진 ---------- */
+
+.over {
+  position: fixed;
+  inset: 0;
+  z-index: 22;
+  display: grid;
+  place-items: center;
+  padding: 26px;
+  background: rgba(14, 11, 7, 0.9);
+}
+
+.over__card {
+  width: 100%;
+  max-width: 340px;
+  padding: 24px 20px 16px;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  animation: riseIn 0.32s var(--ease);
+}
+
+.over__chances {
+  display: block;
+  font-size: 22px;
+  letter-spacing: 6px;
+  color: var(--wrong);
+}
+
+.over__card h3 {
+  margin: 12px 0 8px;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.4px;
+}
+
+.over__card p {
+  margin: 0 0 20px;
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  word-break: keep-all;
+}
+
+.over__go {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--r-md);
+  background: var(--hint);
+  color: #fff;
+  font-size: 16.5px;
+  font-weight: 750;
+  box-shadow: 0 2px 12px rgba(18, 122, 76, 0.3);
+  transition: transform 0.14s var(--ease);
+}
+
+.over__go:active {
+  transform: scale(0.98);
+}
+
+.over__go em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.over__skip {
+  width: 100%;
+  padding: 14px;
+  margin-top: 6px;
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--ink-soft);
+}
+
 /* ---------- coach ---------- */
 
 .coach {

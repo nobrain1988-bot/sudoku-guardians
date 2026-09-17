@@ -191,7 +191,7 @@
           <span class="status__item">
             <svg class="icon icon--sm"><use href="#i-slip" /></svg>
             <span data-i18n="mistakes"></span>
-            <b data-mistakes>0</b>
+            <b class="chances" data-chances></b>
           </span>
           <span class="status__item">
             <svg class="icon icon--sm"><use href="#i-coach" /></svg>
@@ -239,6 +239,19 @@
         </div>
 
         <div class="pad" data-pad></div>
+
+        <div class="over" data-over hidden>
+          <div class="over__card">
+            <span class="over__chances">○ ○ ○</span>
+            <h3 data-i18n="outOfChances"></h3>
+            <p data-i18n="outOfChancesBody"></p>
+            <button class="over__go" data-action="reviveAd">
+              <span data-i18n="watchToContinue"></span>
+              <em data-i18n="adLabel"></em>
+            </button>
+            <button class="over__skip" data-action="practiceMode" data-i18n="continuePractice"></button>
+          </div>
+        </div>
       </section>
 
       <!-- COMPANION PICKER -->
