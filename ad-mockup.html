@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>광고 배치 목업 v2</title>
+    <style>
+      :root {
+        --bg: #f4f1e9; --bg-tint: #ebe6da; --surface: #fffdf8;
+        --ink: #1e1b16; --ink-mid: #57503f; --ink-soft: #8a8272;
+        --line: #e0dacc; --line-bold: #b6ad99; --frame: #4a4437;
+        --accent: #1f6feb; --accent-deep: #1450b4; --accent-soft: #dde9fc; --accent-ink: #14509e;
+        --hint: #127a4c; --hint-soft: #d6f0e2; --gold: #e0a106; --gold-soft: #fbedc6;
+        --ok: #128a52; --warn: #b8860b; --bad: #c1332a;
+        --shadow: 0 1px 2px rgba(60,50,30,.06), 0 6px 20px rgba(60,50,30,.09);
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 26px 28px 40px; background: #e8e3d7; color: var(--ink); font-family: 'Malgun Gothic','Segoe UI',sans-serif; }
+      h1 { margin: 0 0 6px; font-size: 24px; letter-spacing: -0.5px; }
+      .lede { margin: 0; font-size: 13.5px; color: var(--ink-mid); max-width: 1150px; line-height: 1.65; }
+      .lede b { color: var(--ink); }
+      .key { display: flex; gap: 16px; flex-wrap: wrap; margin: 15px 0 22px; font-size: 12.5px; }
+      .key div { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+      .sw { width: 15px; height: 15px; border-radius: 4px; border: 2px dashed; }
+      .sw.rw { border-color: var(--ok); background: #dff3e7; }
+      .sw.bn { border-color: var(--warn); background: #fbf0cf; }
+      .sw.no { border-color: #9aa0a6; background: #e7e9ea; }
+      .sw.pay { border-color: #6a4bb5; background: #e9e2fa; }
+
+      .screens { display: flex; gap: 20px; align-items: flex-start; }
+      .col { width: 288px; flex: none; }
+      .col > h2 { margin: 0 0 3px; font-size: 14.5px; letter-spacing: -0.2px; }
+      .col > .cap { margin: 0 0 9px; font-size: 11.5px; color: var(--ink-soft); min-height: 44px; line-height: 1.45; }
+
+      .phone { position: relative; background: var(--bg); border: 7px solid #23211c; border-radius: 26px; padding: 10px 10px 12px; height: 598px; display: flex; flex-direction: column; gap: 7px; box-shadow: var(--shadow); overflow: hidden; }
+
+      .slot { position: relative; border-radius: 10px; }
+      .slot::after { content: attr(data-n); position: absolute; top: -8px; left: -6px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); z-index: 5; }
+      .slot.rw { outline: 2px dashed var(--ok); outline-offset: 2px; }
+      .slot.rw::after { background: var(--ok); }
+      .slot.bn { outline: 2px dashed var(--warn); outline-offset: 2px; }
+      .slot.bn::after { background: var(--warn); }
+      .slot.no { outline: 2px dashed #9aa0a6; outline-offset: 2px; }
+      .slot.no::after { background: #6b7075; }
+      .slot.pay { outline: 2px dashed #6a4bb5; outline-offset: 2px; }
+      .slot.pay::after { background: #6a4bb5; }
+
+      .adbox { display: grid; place-items: center; text-align: center; background: repeating-linear-gradient(45deg,#efe9da 0 7px,#e6dfcd 7px 14px); border-radius: 8px; color: #8a8272; font-size: 10.5px; font-weight: 700; }
+      .adbox small { display: block; font-weight: 600; font-size: 9px; opacity: .85; margin-top: 1px; }
+      .adlabel { text-align: left; font-size: 9px; color: var(--ink-soft); padding-left: 2px; margin-top: 2px; }
+
+      .logo { text-align: center; font-size: 18px; font-weight: 800; letter-spacing: -0.5px; }
+      .logo span { color: var(--accent); }
+      .rank { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 12px; background: var(--surface); box-shadow: 0 1px 2px rgba(60,50,30,.07); }
+      .por { width: 34px; height: 34px; border-radius: 26%; flex: none; background: radial-gradient(circle at 50% 40%, #e8b73a, #7d5102 70%, #221a08); }
+      .rankb { flex: 1; min-width: 0; }
+      .rankt { display: flex; justify-content: space-between; align-items: baseline; }
+      .rankt b { font-size: 12px; }
+      .rankt span { font-size: 9.5px; color: var(--ink-soft); }
+      .bar { height: 5px; border-radius: 99px; background: var(--bg-tint); margin: 4px 0 3px; overflow: hidden; }
+      .bar i { display: block; height: 100%; background: linear-gradient(90deg,var(--gold),#f0b93a); }
+      .tech { font-size: 9px; color: var(--ink-soft); }
+
+      .card { position: relative; padding: 10px 11px; border-radius: 13px; background: var(--surface); box-shadow: 0 1px 2px rgba(60,50,30,.07); }
+      .card.daily { background: linear-gradient(140deg,var(--accent),var(--accent-deep)); color: #fff; }
+      .card b { font-size: 13px; }
+      .card .sub { font-size: 10px; color: var(--ink-soft); margin-top: 1px; }
+      .card.daily .sub { color: rgba(255,255,255,.85); }
+
+      .adbtn { display: inline-flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: 9px; background: var(--hint); color: #fff; font-size: 11.5px; font-weight: 800; }
+      .pill { font-size: 8.5px; font-weight: 800; padding: 1px 5px; border-radius: 99px; background: rgba(255,255,255,.3); letter-spacing: .3px; }
+      .pill.mute { background: var(--bg-tint); color: var(--ink-soft); }
+
+      .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+      .lv { padding: 9px 5px; border-radius: 11px; background: var(--surface); text-align: center; font-size: 12px; font-weight: 650; box-shadow: 0 1px 2px rgba(60,50,30,.07); }
+      .lv i { display: block; font-style: normal; font-size: 7px; color: var(--accent); letter-spacing: 2.5px; margin-top: 2px; }
+      .lv .passrow { margin-top: 7px; padding-top: 6px; border-top: 1px solid var(--line); font-size: 9px; color: var(--hint); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 4px; }
+
+      .foot { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; }
+      .chip { padding: 7px 10px; border-radius: 99px; background: var(--surface); box-shadow: 0 1px 2px rgba(60,50,30,.07); font-size: 11px; font-weight: 700; }
+      .chip.buy { background: #ece5ff; color: #4b2f9e; }
+
+      .bar-top { display: flex; align-items: center; justify-content: space-between; }
+      .bt { width: 28px; height: 28px; border-radius: 8px; background: var(--surface); display: grid; place-items: center; font-size: 13px; color: var(--ink-mid); }
+      .mid { text-align: center; line-height: 1.2; }
+      .mid b { font-size: 12px; }
+      .mid span { display: block; font-size: 9.5px; color: var(--ink-soft); }
+
+      .board { display: grid; grid-template-columns: repeat(9,1fr); grid-template-rows: repeat(9,1fr); aspect-ratio: 1; background: var(--surface); border: 2px solid var(--frame); border-radius: 9px; overflow: hidden; }
+      .board div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); display: grid; place-items: center; font-size: 12.5px; font-weight: 500; color: var(--accent-ink); }
+      .board div.g { color: var(--ink); font-weight: 700; }
+      .board div:nth-child(9n) { border-right: none; }
+      .board div:nth-child(n+73) { border-bottom: none; }
+      .board div.er { border-right: 2px solid var(--line-bold); }
+      .board div.eb { border-bottom: 2px solid var(--line-bold); }
+      .board div.hl { background: var(--hint-soft); }
+      .board div.fc { background: var(--gold-soft); box-shadow: inset 0 0 0 2px var(--gold); }
+
+      .status { display: flex; justify-content: center; gap: 13px; font-size: 9.5px; color: var(--ink-soft); }
+      .coach { padding: 9px 10px; border-radius: 12px; background: var(--surface); border-left: 4px solid var(--hint); box-shadow: 0 1px 2px rgba(60,50,30,.07); }
+      .chead { display: flex; align-items: center; gap: 6px; }
+      .cbadge { padding: 2px 7px; border-radius: 99px; background: var(--hint-soft); color: var(--hint); font-size: 9px; font-weight: 800; }
+      .ctitle { flex: 1; font-size: 12px; font-weight: 700; }
+      .cbody { margin: 6px 0 0; font-size: 10.5px; color: var(--ink-mid); line-height: 1.55; word-break: keep-all; }
+
+      .sheet { position: absolute; left: 10px; right: 10px; bottom: 12px; padding: 13px 13px 11px; border-radius: 16px 16px 13px 13px; background: var(--surface); box-shadow: 0 -4px 26px rgba(40,32,16,.24); z-index: 3; }
+      .sheet h4 { margin: 0 0 3px; font-size: 13.5px; }
+      .sheet p { margin: 0 0 10px; font-size: 10.5px; color: var(--ink-soft); line-height: 1.5; word-break: keep-all; }
+      .sheet .go { padding: 13px; border-radius: 11px; background: var(--hint); color: #fff; text-align: center; font-size: 13.5px; font-weight: 800; }
+      .sheet .no { padding: 11px; text-align: center; font-size: 12px; color: var(--ink-soft); font-weight: 600; margin-top: 4px; }
+      .scrim { position: absolute; inset: 0; background: rgba(25,20,12,.32); z-index: 2; border-radius: 19px; }
+
+      .tools { display: grid; grid-template-columns: repeat(4,1fr); gap: 5px; }
+      .tl { padding: 6px 2px; border-radius: 10px; background: var(--surface); text-align: center; font-size: 8.5px; color: var(--ink-soft); box-shadow: 0 1px 2px rgba(60,50,30,.07); }
+      .tl i { display: block; font-style: normal; font-size: 12px; color: var(--ink-mid); margin-bottom: 1px; }
+      .tl.on { background: var(--hint-soft); color: var(--hint); }
+      .tl.on i { color: var(--hint); }
+      .pad { display: grid; grid-template-columns: repeat(9,1fr); gap: 3px; }
+      .pad div { padding: 8px 0 5px; border-radius: 8px; background: var(--surface); text-align: center; font-size: 12px; font-weight: 700; color: var(--accent-ink); box-shadow: 0 1px 2px rgba(60,50,30,.07); }
+
+      .wincard { padding: 14px 13px 11px; border-radius: 18px; background: var(--surface); box-shadow: var(--shadow); text-align: center; margin: auto 0; }
+      .ring { width: 74px; height: 74px; margin: 0 auto 7px; border-radius: 50%; background: conic-gradient(var(--gold) 0 92%, var(--bg-tint) 92%); position: relative; display: grid; place-items: center; }
+      .ring::before { content: ''; position: absolute; inset: 8px; border-radius: 50%; background: var(--surface); }
+      .ring b { position: relative; font-size: 23px; font-weight: 800; }
+      .wint { font-size: 16px; font-weight: 800; margin: 2px 0 2px; }
+      .winn { font-size: 10px; color: var(--ink-soft); margin-bottom: 9px; }
+      .xprow { display: flex; justify-content: space-between; font-size: 9.5px; color: var(--ink-soft); }
+      .xprow b { color: var(--hint); font-weight: 800; }
+      .wstats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 9px 0; }
+      .wstats div { padding: 7px 4px; border-radius: 9px; background: var(--bg-tint); }
+      .wstats span { display: block; font-size: 8.5px; color: var(--ink-soft); }
+      .wstats b { font-size: 14px; }
+      .wbtn { padding: 10px; border-radius: 10px; font-size: 12.5px; font-weight: 800; margin-top: 6px; }
+      .wbtn.p { background: var(--accent); color: #fff; }
+      .wbtn.s { background: var(--bg-tint); }
+      .winrow { margin-top: 8px; padding: 10px 11px; border-radius: 11px; background: var(--hint-soft); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; font-weight: 750; color: #0c5c39; }
+
+      .introbox { position: absolute; inset: 0; background: #14161a; border-radius: 19px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; padding: 24px; text-align: center; color: #f0ede7; z-index: 4; }
+      .introbox .tag { font-size: 9.5px; letter-spacing: 1.5px; color: #8b857a; text-transform: uppercase; }
+      .introbox h4 { margin: 0; font-size: 16px; }
+      .introbox p { margin: 0; font-size: 11px; color: #b4afa5; line-height: 1.55; word-break: keep-all; }
+      .introbox .yes { margin-top: 6px; padding: 13px 26px; border-radius: 11px; background: var(--hint); color: #fff; font-size: 13.5px; font-weight: 800; }
+      .introbox .skip { padding: 10px; font-size: 12px; color: #b4afa5; font-weight: 700; }
+
+      table { border-collapse: collapse; margin-top: 24px; font-size: 12.5px; background: var(--surface); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); width: 100%; }
+      th, td { padding: 8px 11px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { background: var(--bg-tint); font-size: 11.5px; }
+      td:first-child { width: 26px; font-weight: 800; }
+      tr:last-child td { border-bottom: none; }
+      .t2 { display: inline-block; padding: 1px 7px; border-radius: 99px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+      .t2.ok { background: #dff3e7; color: #0c5c39; }
+      .t2.wn { background: #fbf0cf; color: #7a5c02; }
+      .t2.no { background: #e7e9ea; color: #4a4f54; }
+      .t2.pay { background: #e9e2fa; color: #4b2f9e; }
+    </style>
+  </head>
+  <body>
+    <h1>광고 배치 최종안 — Sudoku Coach</h1>
+    <p class="lede">
+      조사·설계·심사·반박을 거친 최종안입니다. 첫 목업에서 가장 크게 바뀐 점:
+      <b>강제로 뜨는 광고가 앱 전체에 하나도 없습니다.</b>
+      완료 후 전면광고를 <b>보상형 전면광고</b>로 바꿨습니다 — 뜨기 전에 "광고를 보면 +10 XP" 안내가 먼저 나오고 <b>거절할 수 있습니다.</b>
+      단가는 오히려 더 높고($12~20 vs $9~14), 구글 정책 위반 소지도 사라집니다.
+      그리고 <b>첫날 하루는 광고가 단 하나도 안 나옵니다.</b>
+    </p>
+    <div class="key">
+      <div><span class="sw rw"></span> 보상형 — 사용자가 눌러야만 나옴</div>
+      <div><span class="sw bn"></span> 배너 — 홈에만, 조용히</div>
+      <div><span class="sw no"></span> 광고 절대 금지 구역</div>
+      <div><span class="sw pay"></span> 유료 구매 (광고 제거)</div>
+    </div>
+
+    <div class="screens">
+      <!-- 1 HOME -->
+      <div class="col">
+        <h2>① 홈 화면</h2>
+        <p class="cap">배너 1개 + 보상형 2개 + 광고제거 구매. 전부 무시하고 바로 게임 시작 가능. 일본·한국은 배너 단가가 미국의 1/3이라 아예 끕니다.</p>
+        <div class="phone">
+          <div class="slot bn" data-n="1">
+            <div class="adbox" style="height:46px">광고 <small>상단 고정 배너 · 홈에서만</small></div>
+          </div>
+          <div class="adlabel">광고</div>
+          <div class="logo">Sudoku<span>Coach</span></div>
+          <div class="rank">
+            <span class="por"></span>
+            <span class="rankb">
+              <span class="rankt"><b>황금룡 · 성체</b><span>280 / 1800</span></span>
+              <span class="bar"><i style="width:16%"></i></span>
+              <span class="tech">레벨 8 · 배운 기술 5/8</span>
+            </span>
+          </div>
+          <div class="slot rw" data-n="2">
+            <div class="card" style="display:flex;align-items:center;gap:9px">
+              <div style="flex:1">
+                <b>오늘의 훈련</b>
+                <div class="sub">+15 XP · 코치 설명 1회 추가</div>
+              </div>
+              <div class="adbtn">▶ 훈련 <span class="pill">광고</span></div>
+            </div>
+          </div>
+          <div class="card daily"><b>오늘의 문제</b><div class="sub">9월 17일 · 🔥 4일째</div></div>
+          <div class="levels">
+            <div class="lv">쉬움<i>●○○○</i></div>
+            <div class="lv">보통<i>●●○○</i></div>
+            <div class="slot rw" data-n="3">
+              <div class="lv">어려움<i>●●●○</i>
+                <div class="passrow">코치 패스 — 짧은 광고, 힌트 무제한 <span class="pill mute">광고</span></div>
+              </div>
+            </div>
+            <div class="lv">전문가<i>●●●●</i>
+              <div class="passrow">코치 패스 — 짧은 광고 <span class="pill mute">광고</span></div>
+            </div>
+          </div>
+          <div class="foot">
+            <div class="slot pay" data-n="8"><div class="chip buy">광고 없이 · ₩5,500</div></div>
+            <div class="chip">한국어</div>
+            <div class="chip">☀</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 GAME -->
+      <div class="col">
+        <h2>② 게임 화면 — 광고 없음</h2>
+        <p class="cap">배너 하나도 없습니다. <b>일시정지 화면도 금지</b> — 판 위에 광고를 올리면 계정 영구 정지 사유이고, 이의신청도 안 됩니다.</p>
+        <div class="phone">
+          <div class="bar-top"><span class="bt">‹</span><span class="mid"><b>어려움</b><span>4:12</span></span><span class="bt">॥</span></div>
+          <div class="slot no" data-n="4">
+            <div class="board">
+              <div class="g">3</div><div>1</div><div class="er">6</div><div>4</div><div>5</div><div class="er g">9</div><div class="g">8</div><div>2</div><div>7</div>
+              <div>5</div><div>7</div><div class="er">2</div><div>1</div><div class="g">8</div><div class="er">3</div><div>9</div><div class="g">4</div><div>6</div>
+              <div class="g eb">8</div><div class="eb">4</div><div class="er eb g">9</div><div class="eb">6</div><div class="eb g">2</div><div class="er eb">7</div><div class="eb">1</div><div class="eb g">5</div><div class="eb g">3</div>
+              <div></div><div class="g">6</div><div class="er"></div><div></div><div class="g">4</div><div class="er"></div><div></div><div></div><div></div>
+              <div></div><div class="g">8</div><div class="er"></div><div></div><div></div><div class="er"></div><div></div><div></div><div class="g">4</div>
+              <div class="eb"></div><div class="g eb">5</div><div class="er eb g">1</div><div class="eb"></div><div class="eb"></div><div class="er eb g">6</div><div class="eb"></div><div class="g eb">8</div><div class="g eb">9</div>
+              <div></div><div class="g">2</div><div class="er"></div><div class="g">5</div><div></div><div class="er"></div><div></div><div></div><div class="g">8</div>
+              <div></div><div class="g">3</div><div class="er g">5</div><div class="g">7</div><div class="g">9</div><div class="er g">8</div><div></div><div></div><div></div>
+              <div></div><div></div><div class="er"></div><div class="g">2</div><div class="g">3</div><div class="er"></div><div class="g">6</div><div class="g">7</div><div></div>
+            </div>
+          </div>
+          <div class="status"><span>⊗ 실수 0</span><span>♀ 코치 5/8</span></div>
+          <div style="margin-top:auto;padding:7px 9px;border-radius:10px;background:#e7e9ea;border:2px dashed #9aa0a6;color:#5f6368;font-size:9.5px;font-weight:700;text-align:center;line-height:1.5">
+            판 · 도구 · 숫자판 · 일시정지 화면<br />광고 영구 금지
+          </div>
+          <div class="tools">
+            <div class="tl"><i>↶</i>되돌리기</div><div class="tl"><i>⌫</i>지우기</div><div class="tl"><i>✎</i>메모</div><div class="tl on"><i>♀</i>코치</div>
+          </div>
+          <div class="pad"><div>1</div><div>2</div><div>3</div><div>4</div><div>5</div><div>6</div><div>7</div><div>8</div><div>9</div></div>
+        </div>
+      </div>
+
+      <!-- 3 COACH SHEET -->
+      <div class="col">
+        <h2>③ 코치 설명 — 수익 1순위</h2>
+        <p class="cap">하루 <b>5회 무료</b>. 게다가 <b>처음 보는 기술은 언제나 무료</b>입니다. 판은 1px도 안 밀립니다 — 시트가 위에 덮입니다.</p>
+        <div class="phone">
+          <div class="bar-top" style="opacity:.5"><span class="bt">‹</span><span class="mid"><b>어려움</b><span>4:31</span></span><span class="bt">॥</span></div>
+          <div class="board" style="opacity:.5">
+            <div class="g">3</div><div>1</div><div class="er">6</div><div>4</div><div>5</div><div class="er g">9</div><div class="g">8</div><div>2</div><div>7</div>
+            <div>5</div><div>7</div><div class="er">2</div><div>1</div><div class="g">8</div><div class="er">3</div><div>9</div><div class="g">4</div><div>6</div>
+            <div class="g eb">8</div><div class="eb">4</div><div class="er eb g">9</div><div class="eb">6</div><div class="eb g">2</div><div class="er eb">7</div><div class="eb">1</div><div class="eb g">5</div><div class="eb g">3</div>
+            <div class="hl"></div><div class="hl g">6</div><div class="hl er"></div><div class="hl"></div><div class="hl g">4</div><div class="hl er"></div><div class="hl fc"></div><div class="hl"></div><div class="hl"></div>
+            <div></div><div class="g">8</div><div class="er"></div><div></div><div></div><div class="er"></div><div></div><div></div><div class="g">4</div>
+            <div class="eb"></div><div class="g eb">5</div><div class="er eb g">1</div><div class="eb"></div><div class="eb"></div><div class="er eb g">6</div><div class="eb"></div><div class="g eb">8</div><div class="g eb">9</div>
+            <div></div><div class="g">2</div><div class="er"></div><div class="g">5</div><div></div><div class="er"></div><div></div><div></div><div class="g">8</div>
+            <div></div><div class="g">3</div><div class="er g">5</div><div class="g">7</div><div class="g">9</div><div class="er g">8</div><div></div><div></div><div></div>
+            <div></div><div></div><div class="er"></div><div class="g">2</div><div class="g">3</div><div class="er"></div><div class="g">6</div><div class="g">7</div><div></div>
+          </div>
+          <div class="coach" style="opacity:.5">
+            <div class="chead"><span class="cbadge">♀ 코치</span><span class="ctitle">여기를 보세요</span><span style="font-size:9px;color:var(--ink-soft)">✕ 닫기</span></div>
+            <p class="cbody">4번째 가로줄을 보세요. 들어갈 자리가 한 곳뿐인 숫자가 있습니다.</p>
+          </div>
+          <div class="scrim"></div>
+          <div class="slot rw" data-n="5" style="position:absolute;left:10px;right:10px;bottom:12px;z-index:3">
+            <div class="sheet" style="position:static;box-shadow:none">
+              <h4>왜 그런지 설명해 드릴까요?</h4>
+              <p>기술 이름과 이유를 알려드리고, 기술 도감도 한 칸 채워집니다.<br />짧은 광고, 약 30초, <b>소리가 납니다.</b></p>
+              <div class="go">▶ 광고 보고 설명 듣기</div>
+              <div class="no">✕ 괜찮아요, 혼자 풀래요</div>
+              <p style="margin:6px 0 0;font-size:9px;text-align:center">오늘 무료 설명을 모두 쓰셨어요. 내일 다시 5회.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4 WIN -->
+      <div class="col">
+        <h2>④ 완료 화면</h2>
+        <p class="cap">XP 2배는 <b>버튼 아래</b> 한 줄로 접혀 있습니다. 축하 연출(점수 링·진화)을 절대 가리지 않습니다.</p>
+        <div class="phone">
+          <div class="wincard">
+            <div class="ring"><b>92</b></div>
+            <div class="wint">완성!</div>
+            <div class="winn">깔끔했습니다. 실수 하나 없이 푸셨어요.</div>
+            <div class="xprow"><b>+63 XP</b><span>레벨 8</span></div>
+            <div class="bar"><i style="width:62%"></i></div>
+            <div class="wstats"><div><span>◷ 시간</span><b>8:04</b></div><div><span>⊗ 실수</span><b>0</b></div></div>
+            <div class="wbtn p">한 판 더</div>
+            <div class="slot rw" data-n="7" style="margin-top:6px"><div class="wbtn s" style="margin-top:0">메뉴</div></div>
+            <div class="slot rw" data-n="6">
+              <div class="winrow">XP 두 배로 받기 <span class="pill mute">광고</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5 REWARDED INTERSTITIAL -->
+      <div class="col">
+        <h2>⑤ 보상형 전면광고 안내</h2>
+        <p class="cap">"메뉴"를 누르면 광고가 바로 뜨지 않고 <b>이 안내가 먼저</b> 나옵니다. 거절 가능. 이게 강제 광고를 없앤 핵심입니다.</p>
+        <div class="phone">
+          <div class="slot rw" data-n="7" style="position:absolute;inset:6px;z-index:6">
+            <div class="introbox" style="position:static;height:100%;border-radius:14px">
+              <span class="tag">광고</span>
+              <h4>광고를 보면 +10 XP</h4>
+              <p>약 30초짜리 광고입니다.<br />소리가 납니다.</p>
+              <div class="yes">▶ 광고 보기</div>
+              <div class="skip">✕ 건너뛰기</div>
+              <p style="margin-top:6px;font-size:9px;color:#6f6a62">구글이 직접 그리는 화면입니다.<br />건너뛰어도 아무 손해가 없습니다.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <table>
+      <tr><th></th><th>자리</th><th>종류</th><th>사용자가 받는 것</th><th>제한</th><th>스트레스</th></tr>
+      <tr><td>1</td><td>홈 상단 배너</td><td><span class="t2 wn">배너</span></td><td>없음</td><td>홈에서만. 하루 2~3회 노출. <b>일본·한국은 끔</b>(단가 1/3)</td><td><span class="t2 ok">낮음</span></td></tr>
+      <tr><td>2</td><td>오늘의 훈련</td><td><span class="t2 ok">보상형</span></td><td>+15 XP, 코치 설명 1회 추가</td><td>하루 1번. <b>그날 한 판 푼 뒤에만</b> 나타남 (안 풀면 안 뜸)</td><td><span class="t2 ok">낮음</span></td></tr>
+      <tr><td>3</td><td>코치 패스</td><td><span class="t2 ok">보상형</span></td><td>그 판 힌트 무제한</td><td>어려움·전문가 시작할 때만. 쉬움·보통엔 없음</td><td><span class="t2 ok">낮음</span></td></tr>
+      <tr><td>4</td><td>게임 화면 전체</td><td><span class="t2 no">금지구역</span></td><td>방해 없이 푸는 경험</td><td>영구 0개. 일시정지 화면 포함</td><td><span class="t2 ok">없음</span></td></tr>
+      <tr><td>5</td><td><b>코치 2단계 설명</b></td><td><span class="t2 ok">보상형</span></td><td>이유 설명 + 기술 도감 +1</td><td><b>하루 5회 무료</b> + <b>처음 보는 기술은 항상 무료</b>. 1단계 위치 힌트는 영원히 무료. 하루 4회 보면 더 안 물어봄</td><td><span class="t2 wn">보통</span></td></tr>
+      <tr><td>6</td><td>XP 2배</td><td><span class="t2 ok">보상형</span></td><td>그 판 XP 2배 (전문가는 3배)</td><td>판당 1번. 첫 승리 화면엔 안 나옴</td><td><span class="t2 ok">낮음</span></td></tr>
+      <tr><td>7</td><td>보상형 전면광고</td><td><span class="t2 ok">보상형</span></td><td>+10 XP (거절 가능)</td><td>조건 7개 전부 통과 시에만: 누적 4판↑, 3번째 세션↑, 직전 광고 후 2판↑ <b>그리고</b> 6분↑, <b>오늘의 문제는 영구 제외</b></td><td><span class="t2 ok">낮음</span></td></tr>
+      <tr><td>8</td><td>광고 없이 (구매)</td><td><span class="t2 pay">유료</span></td><td>배너·전면광고 영구 제거</td><td>₩5,500 한 번, 영구. 구독 아님. 보상형은 원하면 계속 볼 수 있음</td><td><span class="t2 ok">없음</span></td></tr>
+    </table>
+  </body>
+</html>

@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f4f1e9" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)" />
+    <title>Sudoku Coach</title>
+  </head>
+  <body>
+    <svg class="sprite" aria-hidden="true">
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></symbol>
+      <symbol id="i-pause" viewBox="0 0 24 24"><path d="M9 5v14M15 5v14" /></symbol>
+      <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" /></symbol>
+      <symbol id="i-undo" viewBox="0 0 24 24">
+        <path d="M4 11h11a4.5 4.5 0 010 9H9" />
+        <path d="M8 7l-4 4 4 4" />
+      </symbol>
+      <symbol id="i-erase" viewBox="0 0 24 24">
+        <path d="M20 5.5H9.8L3.5 12l6.3 6.5H20a.9.9 0 00.9-.9V6.4a.9.9 0 00-.9-.9z" />
+        <path d="M17 9.5l-5 5M12 9.5l5 5" />
+      </symbol>
+      <symbol id="i-notes" viewBox="0 0 24 24">
+        <path d="M12 20h8" />
+        <path d="M16.2 4.3a2 2 0 012.8 2.8L8.4 17.7 4.5 19l1.3-3.9z" />
+      </symbol>
+      <symbol id="i-coach" viewBox="0 0 24 24">
+        <path d="M9.5 18.5h5M10.5 21.5h3" />
+        <path d="M12 2.5a6.2 6.2 0 00-3.8 11.1c.7.6 1.1 1.4 1.2 2.2h5.2c.1-.8.5-1.6 1.2-2.2A6.2 6.2 0 0012 2.5z" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" /></symbol>
+      <symbol id="i-flame" viewBox="0 0 24 24">
+        <path d="M12 3c.5 3-1.6 4-2.8 5.6A5.6 5.6 0 006.5 12a5.5 5.5 0 1011 0c0-2.3-1.2-3.3-2.3-4.6-1.2 1.6-2 1-2-1.2 0-1.4-.4-2.4-1.2-3.2z" />
+      </symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 7.5V12l3 1.8" />
+      </symbol>
+      <symbol id="i-slip" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M9.2 9.2l5.6 5.6M14.8 9.2l-5.6 5.6" />
+      </symbol>
+      <symbol id="i-sound" viewBox="0 0 24 24">
+        <path d="M4 9.5v5h3.2L11 18V6L7.2 9.5z" />
+        <path d="M14.6 9.2a4 4 0 010 5.6M17.2 6.6a7.6 7.6 0 010 10.8" />
+      </symbol>
+      <symbol id="i-sound-off" viewBox="0 0 24 24">
+        <path d="M4 9.5v5h3.2L11 18V6L7.2 9.5z" />
+        <path d="M15 9.5l5 5M20 9.5l-5 5" />
+      </symbol>
+      <symbol id="i-music" viewBox="0 0 24 24">
+        <path d="M9 17V5.5l10-2V15" />
+        <circle cx="6.5" cy="17" r="2.6" />
+        <circle cx="16.5" cy="15" r="2.6" />
+      </symbol>
+      <symbol id="i-music-off" viewBox="0 0 24 24">
+        <path d="M9 17V5.5l10-2V15" />
+        <circle cx="6.5" cy="17" r="2.6" />
+        <circle cx="16.5" cy="15" r="2.6" />
+        <path d="M3.5 3.5l17 17" />
+      </symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="4" />
+        <path d="M12 2.5v2M12 19.5v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2.5 12h2M19.5 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+      </symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24">
+        <path d="M20 14.6A8.6 8.6 0 019.4 4 8.6 8.6 0 1020 14.6z" />
+      </symbol>
+    </svg>
+
+    <div id="app">
+      <!-- TITLE -->
+      <section class="view view--title" data-view="title">
+        <div class="title__grid" data-title-grid></div>
+        <div class="title__art" data-title-art></div>
+        <div class="title__veil"></div>
+        <div class="title__body">
+          <h1 class="title__logo">Sudoku<span>Coach</span></h1>
+          <p class="title__tag" data-i18n="tagline"></p>
+          <button class="btn btn--primary title__start" data-action="enter" data-i18n="start"></button>
+        </div>
+      </section>
+
+      <!-- HOME -->
+      <section class="view view--home" data-view="home" hidden>
+        <header class="home__head">
+          <h1 class="home__logo">Sudoku<span>Coach</span></h1>
+          <p class="home__tag" data-i18n="tagline"></p>
+        </header>
+
+        <button class="rank" data-action="companion">
+          <span class="portrait portrait--hero" data-home-portrait><i></i></span>
+          <span class="rank__body">
+            <span class="rank__top">
+              <b class="rank__name" data-companion-name></b>
+              <span class="rank__xp" data-companion-xp></span>
+            </span>
+            <span class="rank__bar"><i data-companion-bar></i></span>
+            <span class="rank__tech">
+              <span class="rank__lv"><span data-i18n="level"></span> <b data-rank-level>1</b></span>
+              <span class="rank__dot">·</span>
+              <svg class="icon icon--sm"><use href="#i-coach" /></svg>
+              <span data-i18n="techniques"></span>
+              <b data-tech-count>0/8</b>
+            </span>
+          </span>
+        </button>
+
+        <button class="card card--daily" data-action="daily">
+          <span class="card__top">
+            <span class="card__label" data-i18n="dailyChallenge"></span>
+            <span class="card__streak" data-daily-streak hidden>
+              <svg class="icon icon--sm"><use href="#i-flame" /></svg>
+              <b data-streak-count>0</b>
+            </span>
+          </span>
+          <span class="card__date" data-daily-date></span>
+          <span class="card__check" data-daily-done hidden>✓</span>
+        </button>
+
+        <button class="card card--resume" data-action="resume" hidden>
+          <span class="card__label" data-i18n="continueGame"></span>
+          <span class="card__sub" data-resume-info></span>
+          <span class="card__bar"><i data-resume-bar></i></span>
+        </button>
+
+        <nav class="levels">
+          <button class="level" data-action="new" data-difficulty="easy">
+            <span class="level__name" data-i18n="easy"></span>
+            <span class="level__dots" data-dots="1"></span>
+          </button>
+          <button class="level" data-action="new" data-difficulty="medium">
+            <span class="level__name" data-i18n="medium"></span>
+            <span class="level__dots" data-dots="2"></span>
+          </button>
+          <button class="level" data-action="new" data-difficulty="hard">
+            <span class="level__name" data-i18n="hard"></span>
+            <span class="level__dots" data-dots="3"></span>
+          </button>
+          <button class="level" data-action="new" data-difficulty="expert">
+            <span class="level__name" data-i18n="expert"></span>
+            <span class="level__dots" data-dots="4"></span>
+          </button>
+        </nav>
+
+        <footer class="home__foot">
+          <button class="chip" data-action="lang"><span data-lang-label></span></button>
+          <button class="chip" data-action="theme">
+            <svg class="icon icon--sm"><use href="#i-sun" data-theme-icon /></svg>
+          </button>
+          <button class="chip" data-action="sfx">
+            <svg class="icon icon--sm"><use href="#i-sound" data-sfx-icon /></svg>
+            <span data-sfx-label></span>
+          </button>
+          <button class="chip" data-action="music">
+            <svg class="icon icon--sm"><use href="#i-music" data-music-icon /></svg>
+            <span data-music-label></span>
+          </button>
+        </footer>
+      </section>
+
+      <!-- GAME -->
+      <section class="view view--game" data-view="game" hidden>
+        <header class="bar">
+          <button class="bar__btn" data-action="home" aria-label="Back">
+            <svg class="icon"><use href="#i-back" /></svg>
+          </button>
+          <div class="bar__mid">
+            <span class="bar__level" data-game-difficulty></span>
+            <span class="bar__timer" data-timer>0:00</span>
+          </div>
+          <button class="bar__btn" data-action="pause" aria-label="Pause">
+            <svg class="icon"><use href="#i-pause" /></svg>
+          </button>
+        </header>
+
+        <div class="board-wrap">
+          <div class="board" data-board role="grid"></div>
+          <div class="board__veil" data-veil hidden>
+            <button class="veil__btn" data-action="resumeTimer">
+              <svg class="icon"><use href="#i-play" /></svg>
+              <span data-i18n="paused"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="status">
+          <span class="status__item">
+            <svg class="icon icon--sm"><use href="#i-slip" /></svg>
+            <span data-i18n="mistakes"></span>
+            <b data-mistakes>0</b>
+          </span>
+          <span class="status__item">
+            <svg class="icon icon--sm"><use href="#i-coach" /></svg>
+            <span data-i18n="hintsUsed"></span>
+            <b data-hints>0</b>
+          </span>
+        </div>
+
+        <div class="coach" data-coach hidden>
+          <div class="coach__head">
+            <span class="coach__badge">
+              <svg class="icon icon--sm"><use href="#i-coach" /></svg>
+              <span data-i18n="coach"></span>
+            </span>
+            <span class="coach__title" data-coach-title></span>
+            <button class="coach__close" data-action="closeCoach" aria-label="Close">
+              <svg class="icon icon--sm"><use href="#i-close" /></svg>
+            </button>
+          </div>
+          <p class="coach__body" data-coach-body></p>
+          <div class="coach__actions">
+            <button class="coach__more" data-action="coachMore" hidden></button>
+            <button class="coach__apply" data-action="coachApply" hidden></button>
+          </div>
+          <p class="coach__term" data-coach-term></p>
+        </div>
+
+        <div class="tools">
+          <button class="tool" data-action="undo">
+            <svg class="icon"><use href="#i-undo" /></svg>
+            <span class="tool__text" data-i18n="undo"></span>
+          </button>
+          <button class="tool" data-action="erase">
+            <svg class="icon"><use href="#i-erase" /></svg>
+            <span class="tool__text" data-i18n="erase"></span>
+          </button>
+          <button class="tool" data-action="notes">
+            <svg class="icon"><use href="#i-notes" /></svg>
+            <span class="tool__text" data-i18n="notes"></span>
+          </button>
+          <button class="tool tool--coach" data-action="coach">
+            <svg class="icon"><use href="#i-coach" /></svg>
+            <span class="tool__text" data-i18n="coach"></span>
+          </button>
+        </div>
+
+        <div class="pad" data-pad></div>
+      </section>
+
+      <!-- COMPANION PICKER -->
+      <section class="view view--pick" data-view="pick" hidden>
+        <header class="pick__head">
+          <h2 data-i18n="chooseCompanion"></h2>
+          <p data-i18n="companionIntro"></p>
+        </header>
+        <div class="pick__grid" data-pick-grid></div>
+        <button class="btn btn--primary" data-action="confirmPick" data-i18n="startWith" disabled></button>
+      </section>
+
+      <!-- WIN -->
+      <section class="view view--win" data-view="win" hidden>
+        <div class="win__card">
+          <div class="win__ring">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="win__track" cx="60" cy="60" r="52" />
+              <circle class="win__bar" cx="60" cy="60" r="52" data-win-ring />
+            </svg>
+            <span class="win__ring-inner">
+              <b data-win-score>0</b>
+              <i data-i18n="brainScore"></i>
+            </span>
+          </div>
+
+          <h2 class="win__title" data-i18n="solved"></h2>
+          <p class="win__note" data-win-note></p>
+
+          <div class="xp">
+            <div class="xp__up" data-xp-up hidden>
+              <span data-i18n="levelUp"></span>
+            </div>
+            <div class="xp__row">
+              <span class="xp__gain" data-xp-gain></span>
+              <span class="xp__level"><span data-i18n="level"></span> <b data-xp-level>1</b></span>
+            </div>
+            <span class="xp__bar"><i data-xp-bar></i></span>
+          </div>
+
+          <dl class="win__stats">
+            <div>
+              <dt><svg class="icon icon--sm"><use href="#i-clock" /></svg><span data-i18n="time"></span></dt>
+              <dd data-win-time></dd>
+            </div>
+            <div>
+              <dt><svg class="icon icon--sm"><use href="#i-slip" /></svg><span data-i18n="mistakes"></span></dt>
+              <dd data-win-mistakes></dd>
+            </div>
+          </dl>
+
+          <button class="btn btn--primary" data-action="again" data-i18n="playAgain"></button>
+          <button class="btn" data-action="home" data-i18n="backHome"></button>
+        </div>
+
+        <div class="evolve" data-evolve hidden>
+          <div class="evolve__inner">
+            <span class="evolve__rays"></span>
+            <span class="portrait portrait--xl" data-evolve-portrait><i></i></span>
+            <p class="evolve__label" data-evolve-label></p>
+            <h3 class="evolve__name" data-evolve-name></h3>
+            <button class="btn btn--primary" data-action="closeEvolve" data-i18n="gotIt"></button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

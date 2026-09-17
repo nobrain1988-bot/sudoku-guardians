@@ -1,0 +1,22 @@
+{
+  "name": "sudoku-coach",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test:engine": "node scripts/test-engine.js",
+    "android:sync": "npm run build && cap sync android",
+    "android:build": "npm run build && cap sync android && cd android && gradlew.bat assembleDebug"
+  },
+  "devDependencies": {
+    "vite": "^8.3.0"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.2",
+    "@capacitor/cli": "^8.5.2",
+    "@capacitor/core": "^8.5.2"
+  }
+}

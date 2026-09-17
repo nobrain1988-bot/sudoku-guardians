@@ -1,0 +1,56 @@
+name: Android APK (테스트용)
+
+# 폰에 직접 넣어 확인해 보는 '디버그 APK' 를 만든다. main 에 푸시하면 자동 실행.
+# 서명은 안드로이드 기본 디버그 키로 되므로 플레이에는 못 올린다 — 실기 확인용이다.
+# 플레이에 올릴 파일은 android-release.yml 이 만든다.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v5
+
+      - name: Node 설치
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 스도쿠 엔진 검사
+        # 문제 생성·논리 힌트가 깨진 채로 APK 가 나가는 일이 없도록 여기서 먼저 막는다.
+        run: npm run test:engine
+
+      - name: 웹 빌드 (Vite → dist)
+        # VITE_ADS 를 주지 않는다 → 광고는 구글 테스트 광고로 나간다.
+        # 실제 광고가 붙은 APK 를 눌러 보다가 자기 광고를 클릭하면 계정 정지 사유다.
+        run: npm run build
+
+      - name: Java(JDK 21) 설치
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Capacitor 동기화 (dist → android)
+        run: npx cap sync android
+
+      - name: 디버그 APK 빌드
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: APK 업로드 (여기서 내려받는다)
+        uses: actions/upload-artifact@v5
+        with:
+          name: sudoku-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

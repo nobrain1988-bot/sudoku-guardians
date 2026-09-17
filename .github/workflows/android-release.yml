@@ -1,0 +1,132 @@
+name: Android AAB (플레이 업로드용)
+
+# 구글 플레이에 올릴 '정식 서명 AAB'를 만든다. 수동 실행(Actions 탭 → Run workflow).
+#
+# ⚠️ 업로드 키(keystore)는 앱의 '인감도장'이다. 잃어버리면 이 앱을 두 번 다시 업데이트할 수 없다.
+#    그래서 캐시에 두지 않고 깃허브 Secret 에 넣어 영구 보관한다.
+#    (캐시는 7일간 안 쓰면 삭제된다 → 다음 빌드 때 다른 키가 생겨 플레이가 업로드를 거부한다)
+#
+# 처음 한 번만 하는 절차:
+#   1) Secret 에 SUDOKU_KEYSTORE_PASSWORD 를 먼저 넣는다 (직접 정한 비밀번호)
+#   2) 이 워크플로를 실행한다 → 키가 자동 생성되고 Artifacts 에 올라온다
+#   3) sudoku-upload-keystore-DO-NOT-LOSE 를 내려받아 안전한 곳에 보관한다
+#   4) 로그에 찍힌 base64 문자열을 복사해 Secret 에 SUDOKU_KEYSTORE_BASE64 로 저장한다
+#   5) 이후부터는 매번 그 Secret 에서 같은 키를 복원해 쓴다
+on:
+  workflow_dispatch: {}
+
+jobs:
+  build-aab:
+    runs-on: ubuntu-latest
+    env:
+      SUDOKU_KEY_ALIAS: sudoku
+      SUDOKU_KEYSTORE_PATH: /home/runner/.sudoku/upload-keystore.jks
+    steps:
+      - name: 비밀번호 Secret 확인
+        # 없으면 빌드가 한참 돌다가 엉뚱한 곳에서 죽는다. 여기서 먼저, 알아보기 쉽게 멈춘다.
+        env:
+          PW: ${{ secrets.SUDOKU_KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$PW" ]; then
+            echo "::error::SUDOKU_KEYSTORE_PASSWORD Secret 이 없습니다."
+            echo "깃허브 저장소 → Settings → Secrets and variables → Actions → New repository secret"
+            echo "  이름: SUDOKU_KEYSTORE_PASSWORD"
+            echo "  값  : 직접 정한 비밀번호 (영문+숫자+기호 12자 이상 권장, 어딘가에 꼭 적어둘 것)"
+            exit 1
+          fi
+
+      - name: 코드 체크아웃
+        uses: actions/checkout@v5
+
+      - name: Node 설치
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 의존성 설치
+        run: npm ci
+
+      - name: 스도쿠 엔진 검사
+        run: npm run test:engine
+
+      - name: 웹 빌드 (Vite → dist) — 실제 광고로
+        # VITE_ADS=real 일 때만 실제 광고 단위를 쓴다.
+        # 테스트 APK(android.yml)에는 이 값이 없으므로 거기서는 테스트 광고가 나간다.
+        # 손으로 바꾸는 방식이면 언젠가 반드시 한쪽을 잊는다.
+        run: npm run build
+        env:
+          VITE_ADS: real
+
+      - name: Java(JDK 21) 설치
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Capacitor 동기화 (dist → android)
+        run: npx cap sync android
+
+      - name: 업로드 키 준비 (Secret 에서 복원 / 없으면 새로 생성)
+        id: keystore
+        env:
+          SUDOKU_KEYSTORE_PASSWORD: ${{ secrets.SUDOKU_KEYSTORE_PASSWORD }}
+          SUDOKU_KEY_PASSWORD: ${{ secrets.SUDOKU_KEYSTORE_PASSWORD }}
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.SUDOKU_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p ~/.sudoku
+          if [ -n "$UPLOAD_KEYSTORE_BASE64" ]; then
+            echo "$UPLOAD_KEYSTORE_BASE64" | base64 -d > "$SUDOKU_KEYSTORE_PATH"
+            echo "Secret 에서 업로드 키 복원 완료"
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          else
+            keytool -genkeypair -v -keystore "$SUDOKU_KEYSTORE_PATH" \
+              -alias "$SUDOKU_KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$SUDOKU_KEYSTORE_PASSWORD" -keypass "$SUDOKU_KEY_PASSWORD" \
+              -dname "CN=JBRO Company, O=JBRO Company, L=Incheon, ST=Incheon, C=KR"
+            echo "새 업로드 키 생성 완료"
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 🔴 새 키를 만들었다면 — 이 값을 Secret 에 저장할 것
+        if: steps.keystore.outputs.created == 'true'
+        run: |
+          echo "=============================================================="
+          echo " 아래 base64 문자열을 통째로 복사해서"
+          echo " Settings → Secrets → Actions → New repository secret 에"
+          echo "   이름: SUDOKU_KEYSTORE_BASE64"
+          echo " 로 저장하세요. 저장 전에는 이 앱을 업데이트할 수 없습니다."
+          echo "=============================================================="
+          base64 -w0 "$SUDOKU_KEYSTORE_PATH"
+          echo ""
+          echo "=============================================================="
+
+      - name: 버전코드 자동 부여 (실행마다 증가 → 플레이 업로드 중복 방지)
+        run: |
+          VC=$((1000 + GITHUB_RUN_NUMBER))
+          sed -i -E "s/versionCode[[:space:]]+[0-9]+/versionCode ${VC}/" android/app/build.gradle
+          echo "versionCode = ${VC}"
+
+      - name: 정식 AAB 빌드 (서명)
+        env:
+          SUDOKU_KEYSTORE_PASSWORD: ${{ secrets.SUDOKU_KEYSTORE_PASSWORD }}
+          SUDOKU_KEY_PASSWORD: ${{ secrets.SUDOKU_KEYSTORE_PASSWORD }}
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: AAB 업로드 (플레이에 올릴 파일)
+        uses: actions/upload-artifact@v5
+        with:
+          name: sudoku-release-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: 업로드 키 백업 (새로 만든 경우에만)
+        if: steps.keystore.outputs.created == 'true'
+        uses: actions/upload-artifact@v5
+        with:
+          name: sudoku-upload-keystore-DO-NOT-LOSE
+          path: /home/runner/.sudoku/upload-keystore.jks
+          if-no-files-found: error
