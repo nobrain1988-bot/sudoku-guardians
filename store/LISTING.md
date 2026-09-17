@@ -11,17 +11,17 @@
 
 **App name** (30자 제한)
 ```
-Sudoku Coach: Learn & Solve
+Sudoku Guardians
 ```
 
 **Short description** (80자 제한)
 ```
-Sudoku that shows you why, not just the answer. Raise a legendary creature.
+Sudoku that shows you why — and a guardian that grows as you play.
 ```
 
 **Full description** (4000자 제한)
 ```
-Most sudoku apps hand you the answer. Sudoku Coach teaches you how to find it.
+Most sudoku apps hand you the answer. Sudoku Guardians teaches you how to find it.
 
 WHY, NOT JUST WHAT
 Tap the Coach and you get a nudge first — "Look at row 4. One number has only one place left." Still stuck? The Coach names the technique and explains the logic in plain words: "In row 4, 5 is blocked from every other empty cell, so 5 goes here." That's a Hidden Single. Next time you'll spot it yourself.
@@ -29,7 +29,7 @@ Tap the Coach and you get a nudge first — "Look at row 4. One number has only 
 Eight real sudoku techniques, explained the moment they matter:
 Last Number Left · Only One Spot · Locked in a Box · Locked in a Line · Matching Pair · Hidden Pair · Matching Triple · X-Wing
 
-RAISE A LEGENDARY COMPANION
+RAISE A LEGENDARY GUARDIAN
 Choose a Golden Dragon, Phoenix, White Tiger, Griffin or Leviathan. It starts as an egg and grows every time you solve a puzzle — hatchling, juvenile, adolescent, adult, and finally its legendary form. Six hand-painted stages for each creature. Raise one to legend, then start the next.
 
 BUILT TO BE EASY ON THE EYES
@@ -59,17 +59,17 @@ Made for anyone who wants to get genuinely better at sudoku — not just finish 
 
 **앱 이름** (30자)
 ```
-스도쿠 코치 — 배우는 스도쿠
+수호신 스도쿠
 ```
 
 **간단한 설명** (80자)
 ```
-답이 아니라 푸는 방법을 알려주는 스도쿠. 풀수록 전설의 동물이 자랍니다.
+푸는 방법을 알려주는 스도쿠. 나만의 수호신이 함께 자랍니다.
 ```
 
 **자세한 설명** (4000자)
 ```
-대부분의 스도쿠 앱은 힌트를 누르면 답을 채워줍니다. 스도쿠 코치는 찾는 방법을 알려줍니다.
+대부분의 스도쿠 앱은 힌트를 누르면 답을 채워줍니다. 수호신 스도쿠는 찾는 방법을 알려줍니다.
 
 답이 아니라 '왜'를 알려줍니다
 코치를 누르면 먼저 방향만 알려줍니다. "4번째 가로줄을 보세요. 들어갈 자리가 한 곳뿐인 숫자가 있습니다." 그래도 막히면 그때 이유를 설명합니다. "4번째 가로줄에서 5는 다른 빈칸에 모두 막혀 있어요. 그래서 여기에 5가 들어갑니다." 이게 바로 '들어갈 자리 하나' 기법입니다. 다음엔 혼자 보입니다.
@@ -77,7 +77,7 @@ Made for anyone who wants to get genuinely better at sudoku — not just finish 
 실제 스도쿠 기법 8가지를, 필요한 순간에 설명해 드립니다.
 남은 숫자 하나 · 들어갈 자리 하나 · 박스에 갇힌 숫자 · 줄에 갇힌 숫자 · 짝꿍 두 칸 · 숨은 짝꿍 · 짝꿍 세 칸 · X-윙
 
-전설의 동물을 함께 키웁니다
+나만의 수호신을 함께 키웁니다
 황금룡, 불사조, 백호, 그리핀, 해룡 중 하나를 고르세요. 알에서 시작해 한 판 풀 때마다 자랍니다. 새끼 · 유체 · 성장기 · 성체를 거쳐 마침내 전설이 됩니다. 동물마다 6단계 그림이 따로 있습니다. 하나를 전설까지 키우면 다음 동물을 시작할 수 있습니다.
 
 눈이 편한 화면
@@ -107,17 +107,17 @@ Made for anyone who wants to get genuinely better at sudoku — not just finish 
 
 **アプリ名** (30자)
 ```
-数独コーチ — 解き方が学べる数独
+守護獣の数独
 ```
 
 **簡単な説明** (80자)
 ```
-答えではなく解き方を教える数独。解くほど伝説の生きものが育ちます。
+解き方を教える数独。あなたの守護獣が一緒に育ちます。
 ```
 
 **詳しい説明** (4000자)
 ```
-たいていの数独アプリは、ヒントを押すと答えを埋めてくれます。数独コーチは、見つけ方を教えます。
+たいていの数独アプリは、ヒントを押すと答えを埋めてくれます。守護獣の数独は、見つけ方を教えます。
 
 答えではなく「なぜ」を教えます
 コーチを押すと、まず方向だけを示します。「4行目を見てください。入る場所がひとつしかない数字があります。」それでも詰まったら、そのとき理由を説明します。「4行目では5は他の空きマスすべてで塞がれています。だからここに5が入ります。」これが「入る場所はひとつ」という手筋です。次からは自分で見えるようになります。
@@ -125,7 +125,7 @@ Made for anyone who wants to get genuinely better at sudoku — not just finish 
 実際の数独の手筋8種類を、必要な瞬間に解説します。
 残りひとつ · 入る場所はひとつ · ブロックに閉じ込め · ラインに閉じ込め · そろったペア · 隠れペア · そろったトリプル · X-Wing
 
-伝説の生きものを一緒に育てます
+あなたの守護獣を一緒に育てます
 黄金龍、不死鳥、白虎、グリフォン、海龍から一体を選びます。卵から始まり、1問解くごとに育ちます。ひな · 幼体 · 成長期 · 成体を経て、ついに伝説の姿へ。生きものごとに6段階の絵を用意しました。一体を伝説まで育てたら、次の仲間を始められます。
 
 目にやさしい画面
