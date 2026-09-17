@@ -1,5 +1,6 @@
 import './style.css';
 import { audio } from './audio.js';
+import { hideBanner, initAds, showBanner, showInterstitialOnExit } from './lib/ads.js';
 import { BOXES, PEERS, boxOf, colOf, rowOf } from './core/sudoku.js';
 import { CREATURES, artPath, creatureById, creatureProgress, paintPlaceholder } from './creatures.js';
 import { LANGS, detectLang, explain, t } from './i18n.js';
@@ -70,6 +71,7 @@ function boot() {
   refreshHome();
   show('title');
   new ResizeObserver(renderTitleGrid).observe($('#app'));
+  initAds();
 }
 
 function buildBoard() {
@@ -161,6 +163,11 @@ function show(view) {
   $$('[data-view]').forEach((el) => {
     el.hidden = el.dataset.view !== view;
   });
+  // 배너는 홈에만. 판·코치·완료 화면에는 절대 띄우지 않는다 —
+  // 숫자판 옆 배너는 애드몹이 '권장하지 않는 구현'으로 직접 명시했고,
+  // 적발되면 조치가 앱이 아니라 계정 단위로 떨어진다.
+  if (view === 'home') showBanner();
+  else hideBanner();
 }
 
 function renderPortrait(el, id, stage) {
@@ -700,6 +707,13 @@ function bindEvents() {
       if (game && !game.isComplete()) saveGame(game);
       refreshHome();
       show('home');
+    }
+    // 완료 화면에서 나갈 때만 전면광고. 게임 화면 뒤로가기(home)와 분리해 둔 이유다 —
+    // 같은 동작을 쓰면 문제를 풀다 뒤로가기만 눌러도 광고가 떠서 구글 정책 위반이 된다.
+    if (action === 'winExit') {
+      refreshHome();
+      show('home');
+      showInterstitialOnExit();
     }
     if (action === 'again') startGame(newGame(game?.difficulty ?? 'medium'));
     if (action === 'undo') {
