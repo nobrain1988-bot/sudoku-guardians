@@ -121,7 +121,9 @@ button {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  padding: 14px 16px;
+  /* 위쪽은 카메라 구멍·상태바 아래로 내린다. targetSdk 36 부터 안드로이드가
+     화면 끝까지(edge-to-edge) 그리므로 이걸 안 주면 상단바가 카메라에 가린다. */
+  padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 14px);
   gap: 11px;
 }
 
@@ -1025,7 +1027,6 @@ button {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 5px;
-  padding-bottom: env(safe-area-inset-bottom);
 }
 
 .key {
