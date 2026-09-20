@@ -10,6 +10,9 @@
   // Audio 클래스는 window.AudioContext 를 쓴다. 실시간 대신 오프라인으로 바꿔치기하면
   // 스피커 없이도 파형을 통째로 받아 검사할 수 있다.
   const offline = new OfflineAudioContext(2, RATE * SECONDS, RATE);
+  // unlock() 은 멈춰 있는 컨텍스트를 깨우려 한다. 오프라인 컨텍스트는 그게 안 되므로
+  // 아무것도 안 하는 함수로 덮는다(어차피 startRendering 이 전부 돌린다).
+  offline.resume = () => Promise.resolve();
   window.AudioContext = function () {
     return offline;
   };
