@@ -16,7 +16,6 @@ const list = (arr, sep) => arr.join(sep);
 const en = {
   label: 'English',
   ui: {
-    tagline: 'The sudoku that teaches you how to solve it',
     dailyChallenge: 'Daily Challenge',
     continueGame: 'Continue',
     easy: 'Easy',
@@ -53,7 +52,7 @@ const en = {
     startWith: 'Raise this one',
     evolved: 'Evolved!',
     companionDone: 'Fully grown',
-    pickNext: 'Raise a new companion',
+    pickNext: 'New companion',
     maxed: 'Legendary — fully grown',
     c_dragon: 'Golden Dragon',
     c_phoenix: 'Phoenix',
@@ -127,7 +126,6 @@ const en = {
 const ko = {
   label: '한국어',
   ui: {
-    tagline: '푸는 방법을 알려주는 스도쿠',
     dailyChallenge: '오늘의 문제',
     continueGame: '이어하기',
     easy: '쉬움',
@@ -238,7 +236,6 @@ const ko = {
 const ja = {
   label: '日本語',
   ui: {
-    tagline: '解き方を教えてくれる数独',
     dailyChallenge: '今日の問題',
     continueGame: '続きから',
     easy: 'やさしい',

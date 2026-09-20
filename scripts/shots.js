@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { setTimeout as sleep } from 'node:timers/promises';
 
 const OUT_DIR = process.argv[2] ?? 'shots';
-const URL_BASE = 'http://localhost:5173';
+const URL_BASE = process.env.SHOT_URL ?? 'http://localhost:5173';
 const PORT = 9333;
 
 const BROWSERS = [
@@ -390,7 +390,116 @@ async function main() {
     },
   ];
 
-  const SETS = { creature: CREATURE_SHOTS, all: ALL_SHOTS, title: TITLE_SHOTS };
+  // 플레이 스토어에 올릴 8장. 기본 등록 언어가 영어(미국)이므로 화면도 영어여야 한다 —
+  // 주 타겟이 미국·일본인데 한국어 화면을 올리면 첫인상에서 바로 걸러진다.
+  const STORE_SHOTS = [
+    {
+      name: '1-title',
+      setup: `
+        localStorage.clear();
+        localStorage.setItem('sc.lang', 'en');
+        localStorage.setItem('sc.theme', 'light');
+        localStorage.setItem('sc.stats', JSON.stringify({
+          solved: 23, best: { easy: 184 }, dailyDone: null, streak: 4, xp: 770,
+          techniques: { nakedSingle: true, hiddenSingle: true, pointing: true, claiming: true, nakedPair: true },
+          creature: 'dragon', creatureXp: { dragon: 4300 }, companions: [],
+        }));
+        location.reload();
+      `,
+    },
+    { name: '2-home', setup: ENTER },
+    {
+      name: '3-picker',
+      setup: `
+        const s0 = JSON.parse(localStorage.getItem('sc.stats'));
+        s0.creature = null; s0.creatureXp = {};
+        localStorage.setItem('sc.stats', JSON.stringify(s0));
+        location.reload();
+      `,
+      after: `
+        ${ENTER}
+        await new Promise((r) => setTimeout(r, 300));
+        document.querySelector('[data-pick="tiger"]').click();
+      `,
+    },
+    {
+      name: '4-game',
+      setup: `
+        const s1 = JSON.parse(localStorage.getItem('sc.stats'));
+        s1.creature = 'dragon'; s1.creatureXp = { dragon: 900 };
+        localStorage.setItem('sc.stats', JSON.stringify(s1));
+        localStorage.removeItem('sc.save');
+        location.reload();
+      `,
+      after: `
+        ${ENTER}
+        document.querySelector('[data-difficulty="medium"]').click();
+        await new Promise((r) => setTimeout(r, 1000));
+        ${PARTIAL}
+        cells[[...g.board].findIndex((v) => !v)].click();
+      `,
+    },
+    {
+      name: '5-coach',
+      setup: `
+        document.querySelector('[data-action="coach"]').click();
+        await new Promise((r) => setTimeout(r, 250));
+        document.querySelector('[data-action="coachMore"]').click();
+      `,
+    },
+    {
+      name: '6-win',
+      setup: `
+        ${FILL}
+        for (let i = 0; i < 81; i++) {
+          if (g.board[i] === g.solution[i]) continue;
+          cells[i].click();
+          keys[g.solution[i] - 1].click();
+        }
+        await new Promise((r) => setTimeout(r, 2600));
+      `,
+    },
+    {
+      name: '7-evolve',
+      setup: `
+        document.querySelector('[data-action="winExit"]').click();
+        const s = JSON.parse(localStorage.getItem('sc.stats'));
+        s.creatureXp.dragon = 4150;
+        localStorage.setItem('sc.stats', JSON.stringify(s));
+        await new Promise((r) => setTimeout(r, 200));
+        document.querySelector('[data-difficulty="hard"]').click();
+        await new Promise((r) => setTimeout(r, 1200));
+        ${FILL}
+        for (let i = 0; i < 81; i++) {
+          if (g.board[i] === g.solution[i]) continue;
+          cells[i].click();
+          keys[g.solution[i] - 1].click();
+        }
+        await new Promise((r) => setTimeout(r, 3200));
+      `,
+    },
+    {
+      name: '8-dark',
+      setup: `
+        localStorage.setItem('sc.theme', 'dark');
+        const s2 = JSON.parse(localStorage.getItem('sc.stats'));
+        s2.creature = 'tiger';
+        s2.creatureXp = { tiger: 1350 };
+        localStorage.setItem('sc.stats', JSON.stringify(s2));
+        localStorage.removeItem('sc.save');
+        location.reload();
+      `,
+      after: `
+        ${ENTER}
+        document.querySelector('[data-difficulty="hard"]').click();
+        await new Promise((r) => setTimeout(r, 1100));
+        ${PARTIAL}
+        document.querySelector('[data-action="coach"]').click();
+      `,
+    },
+  ];
+
+  const SETS = { creature: CREATURE_SHOTS, all: ALL_SHOTS, title: TITLE_SHOTS, store: STORE_SHOTS };
   const only = SETS[process.env.SHOT_SET] ?? SHOTS;
   for (const shot of only) {
     await cdp.run(shot.setup);

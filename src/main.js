@@ -195,6 +195,7 @@ function renderCompanion(stats) {
   card.style.setProperty('--creature-glow', theme.glow);
   card.style.setProperty('--creature-accent', theme.accent);
   const name = $('[data-companion-name]');
+  const stage = $('[data-companion-stage]');
   const xp = $('[data-companion-xp]');
   const bar = $('[data-companion-bar]');
 
@@ -202,6 +203,7 @@ function renderCompanion(stats) {
     card.classList.add('rank--empty');
     renderPortrait($('[data-home-portrait]'), CREATURES[0].id, 0);
     name.textContent = t(state.lang, 'chooseCompanion');
+    stage.textContent = '';
     xp.textContent = '';
     xp.classList.remove('rank__xp--action');
     bar.style.width = '0%';
@@ -212,7 +214,8 @@ function renderCompanion(stats) {
   card.classList.remove('rank--empty');
   const progress = creatureProgress(active.xp);
   renderPortrait($('[data-home-portrait]'), active.id, progress.stage);
-  name.textContent = `${t(state.lang, `c_${active.id}`)} · ${t(state.lang, `s_${progress.stage + 1}`)}`;
+  name.textContent = t(state.lang, `c_${active.id}`);
+  stage.textContent = t(state.lang, `s_${progress.stage + 1}`);
   xp.textContent = progress.complete ? `${t(state.lang, 'pickNext')} ›` : `${progress.into} / ${progress.span}`;
   xp.classList.toggle('rank__xp--action', progress.complete);
   bar.style.width = `${progress.percent}%`;
@@ -645,7 +648,10 @@ function showEvolution(evo) {
   const stage = evo.after.stage;
   renderPortrait($('[data-evolve-portrait]'), evo.id, stage);
   $('[data-evolve-label]').textContent = t(state.lang, evo.after.complete ? 'companionDone' : 'evolved');
-  $('[data-evolve-name]').textContent = `${t(state.lang, `c_${evo.id}`)} · ${t(state.lang, `s_${stage + 1}`)}`;
+  // 이름과 등급을 한 줄에 '·'로 묶으면 줄이 바뀔 때 구분점이 앞줄 끝에 매달린다.
+  // 각자 줄을 주면 그 문제가 없어지고, 이 시스템의 보상인 등급 이름도 제 몫을 받는다.
+  $('[data-evolve-name]').textContent = t(state.lang, `c_${evo.id}`);
+  $('[data-evolve-stage]').textContent = t(state.lang, `s_${stage + 1}`);
   $('[data-evolve]').hidden = false;
   state.evolveComplete = evo.after.complete;
   audio.play('levelUp');
