@@ -1,0 +1,162 @@
+<!doctype html>
+<!-- 아이콘 원본 한 곳. 스토어용·런처용·원형용을 같은 그림에서 뽑는다.
+     따로 만들면 반드시 서로 달라진다.
+
+     ?mode=store   512 정사각, 꽉 찬 판  → 플레이 스토어 아이콘
+     ?mode=fg      적응형 아이콘 전경(투명 배경). 런처가 바깥 1/6 을 잘라내므로 판을 작게 둔다
+     ?mode=round   원형 아이콘
+     ?mode=preview 런처별로 잘린 모습 비교
+
+     뽑기: node scripts/make-icons.js -->
+<meta charset="utf-8" />
+<title>icon</title>
+<style>
+  html,
+  body {
+    margin: 0;
+    background: transparent;
+  }
+
+  body.preview {
+    background: #2b2b2b;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #bbb;
+  }
+
+  .row {
+    display: flex;
+    gap: 26px;
+    padding: 26px;
+    align-items: flex-start;
+  }
+
+  figure {
+    margin: 0;
+    text-align: center;
+  }
+
+  figcaption {
+    margin-top: 8px;
+    font-size: 13px;
+  }
+
+  .canvas {
+    position: relative;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+  }
+
+  .canvas--filled {
+    background: radial-gradient(circle at 50% 50%, #3a2a08 0%, #140f06 52%, #07060a 100%);
+  }
+
+  .canvas--round {
+    border-radius: 50%;
+  }
+
+  /* 판 뒤에서 번지는 금빛. 이게 없으면 어두운 배경에서 아이콘이 가라앉는다. */
+  .glow {
+    position: absolute;
+    inset: -14%;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 193, 58, 0.5) 0%, transparent 60%);
+  }
+
+  /* 칸 크기(--cell)만 정하면 테두리·글씨·모서리가 전부 비례로 따라온다.
+     덕분에 48px 부터 512px 까지 같은 비율로 나온다. */
+  .grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(3, var(--cell));
+    grid-template-rows: repeat(3, var(--cell));
+    gap: calc(var(--cell) * 0.065);
+    padding: calc(var(--cell) * 0.065);
+    border-radius: calc(var(--cell) * 0.16);
+    background: linear-gradient(160deg, #ffd873, #e0a22a 55%, #b9791a);
+    box-shadow:
+      0 0 0 calc(var(--cell) * 0.028) rgba(0, 0, 0, 0.5),
+      0 calc(var(--cell) * 0.12) calc(var(--cell) * 0.32) rgba(0, 0, 0, 0.6);
+  }
+
+  .cell {
+    display: grid;
+    place-items: center;
+    border-radius: calc(var(--cell) * 0.055);
+    background: linear-gradient(180deg, #14110c, #0a0807);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: calc(var(--cell) * 0.78);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: #f6dc9a;
+    text-shadow: 0 0 calc(var(--cell) * 0.13) rgba(255, 190, 60, 0.45);
+  }
+
+  /* 가운데 칸 = 용. 그림 배경이 검정이라 screen 으로 얹으면 검정만 빠지고 금빛만 남는다. */
+  .cell--art {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 46%, #3f2c07, #0a0807 78%);
+  }
+
+  .cell--art img {
+    position: absolute;
+    width: 272%;
+    left: -86%;
+    top: -25%;
+    mix-blend-mode: screen;
+    filter: saturate(1.2) contrast(1.12);
+  }
+
+  .cell--art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--cell) * 0.055);
+    box-shadow: inset 0 0 0 calc(var(--cell) * 0.022) rgba(255, 214, 110, 0.85);
+  }
+</style>
+
+<script type="module">
+  const q = new URLSearchParams(location.search);
+  const mode = q.get('mode') ?? 'store';
+  const size = Number(q.get('size') ?? (mode === 'preview' ? 216 : 512));
+
+  // 판이 캔버스에서 차지하는 비율. 전경(fg)은 런처가 바깥을 잘라내므로 작게 둔다.
+  const SCALE = { store: 0.9, fg: 0.53, round: 0.7, preview: 0.53 };
+
+  const board = (px, scale) => {
+    const cell = (px * scale) / 3.2;
+    const cells = [5, 3, 7, 6, null, 1, 9, 8, 4]
+      .map((n) =>
+        n === null
+          ? '<div class="cell cell--art"><img src="/creatures/dragon-6.webp" alt=""></div>'
+          : `<div class="cell">${n}</div>`,
+      )
+      .join('');
+    return `<div class="glow"></div><div class="grid" style="--cell:${cell}px">${cells}</div>`;
+  };
+
+  const canvas = (px, scale, kind) =>
+    `<div class="canvas canvas--${kind}" style="width:${px}px;height:${px}px">${board(px, scale)}</div>`;
+
+  if (mode === 'preview') {
+    document.body.className = 'preview';
+    // 마스크는 108dp 중 가운데 72dp 만 남긴다 — 1.5배로 키워 그 잘림을 흉내 낸다.
+    const masked = (radius, label) =>
+      `<figure><div style="width:${size}px;height:${size}px;border-radius:${radius};overflow:hidden;background:#0d0a06">
+         <div style="transform:scale(1.5);transform-origin:center">${canvas(size, SCALE.preview, 'plain')}</div>
+       </div><figcaption>${label}</figcaption></figure>`;
+    document.body.innerHTML = `<div class="row">
+      <figure><div style="outline:2px dashed #555">${canvas(size, SCALE.preview, 'filled')}</div><figcaption>108dp 원본</figcaption></figure>
+      ${masked('50%', '원형 런처 (픽셀)')}
+      ${masked('26%', '둥근사각 (삼성)')}
+    </div>`;
+  } else {
+    // 전경은 배경이 투명해야 한다 — 배경색은 안드로이드가 따로 깐다.
+    const kind = mode === 'fg' ? 'plain' : mode === 'round' ? 'filled canvas--round' : 'filled';
+    document.body.innerHTML = canvas(size, SCALE[mode], kind);
+  }
+
+  document.title = 'ready';
+</script>

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- 적응형 아이콘의 배경. 전경(금색 스도쿠판)이 이 위에 얹힌다.
+         기본값이 흰색이라 금색 테두리가 배경에 묻어 사라졌다. 어두운 금빛으로 바꾼다. -->
+    <color name="ic_launcher_background">#120D06</color>
 </resources>

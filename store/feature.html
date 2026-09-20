@@ -1,0 +1,161 @@
+<!doctype html>
+<!-- 플레이 스토어 그래픽 이미지(배너) 1024x500.
+     뽑기: node scripts/shot-page.js http://localhost:5311/store/feature.html store/feature-1024x500.png 1024 500 1
+
+     기본 등록 언어가 영어(미국)이므로 문구도 영어다.
+     오른쪽은 아이콘과 같은 3x3 판 — 배너와 아이콘이 같은 그림이어야 브랜드가 붙는다. -->
+<meta charset="utf-8" />
+<title>feature graphic</title>
+<style>
+  html,
+  body {
+    margin: 0;
+    width: 1024px;
+    height: 500px;
+    overflow: hidden;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .banner {
+    position: relative;
+    width: 1024px;
+    height: 500px;
+    background: radial-gradient(circle at 74% 50%, #2e2107 0%, #120d06 46%, #07060a 100%);
+    overflow: hidden;
+  }
+
+  /* 배경에 깔리는 큰 스도쿠판. 작게라도 보여야 '이게 스도쿠구나' 가 먼저 온다. */
+  .lines {
+    position: absolute;
+    inset: -6%;
+    background-image:
+      repeating-linear-gradient(to right, rgba(255, 205, 105, 0.13) 0 2px, transparent 2px 114px),
+      repeating-linear-gradient(to bottom, rgba(255, 205, 105, 0.13) 0 2px, transparent 2px 114px);
+  }
+
+  .veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, #07060a 26%, rgba(7, 6, 10, 0.5) 48%, transparent 66%);
+  }
+
+  .copy {
+    position: absolute;
+    left: 66px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 470px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 66px;
+    font-weight: 800;
+    line-height: 1.03;
+    letter-spacing: -2.4px;
+    color: #fff;
+    text-shadow: 0 3px 26px rgba(0, 0, 0, 0.75);
+  }
+
+  h1 span {
+    color: #8cbcff;
+  }
+
+  p {
+    margin: 20px 0 0;
+    font-size: 25px;
+    line-height: 1.34;
+    color: rgba(255, 255, 255, 0.82);
+  }
+
+  .pill {
+    display: inline-block;
+    margin-top: 26px;
+    padding: 13px 25px;
+    border-radius: 999px;
+    border: 2px solid rgba(255, 205, 105, 0.5);
+    background: rgba(255, 190, 60, 0.11);
+    font-size: 20px;
+    font-weight: 700;
+    color: #ffd97a;
+  }
+
+  /* ---- 오른쪽: 아이콘과 같은 3x3 판 ---- */
+  .board {
+    --cell: 112px;
+    position: absolute;
+    right: 92px;
+    top: 50%;
+    transform: translateY(-50%) rotate(-5deg);
+    display: grid;
+    grid-template-columns: repeat(3, var(--cell));
+    grid-template-rows: repeat(3, var(--cell));
+    gap: calc(var(--cell) * 0.065);
+    padding: calc(var(--cell) * 0.065);
+    border-radius: calc(var(--cell) * 0.16);
+    background: linear-gradient(160deg, #ffd873, #e0a22a 55%, #b9791a);
+    box-shadow:
+      0 0 0 4px rgba(0, 0, 0, 0.45),
+      0 28px 70px rgba(0, 0, 0, 0.72),
+      0 0 120px rgba(255, 190, 60, 0.3);
+  }
+
+  .cell {
+    display: grid;
+    place-items: center;
+    border-radius: calc(var(--cell) * 0.055);
+    background: linear-gradient(180deg, #14110c, #0a0807);
+    font-size: calc(var(--cell) * 0.78);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.035em;
+    color: #f6dc9a;
+    text-shadow: 0 0 14px rgba(255, 190, 60, 0.45);
+  }
+
+  .cell--art {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 46%, #3f2c07, #0a0807 78%);
+  }
+
+  .cell--art img {
+    position: absolute;
+    width: 272%;
+    left: -86%;
+    top: -25%;
+    mix-blend-mode: screen;
+    filter: saturate(1.2) contrast(1.12);
+  }
+
+  .cell--art::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: calc(var(--cell) * 0.055);
+    box-shadow: inset 0 0 0 3px rgba(255, 214, 110, 0.85);
+  }
+</style>
+
+<div class="banner">
+  <div class="lines"></div>
+  <div class="veil"></div>
+
+  <div class="board">
+    <div class="cell">5</div>
+    <div class="cell">3</div>
+    <div class="cell">7</div>
+    <div class="cell">6</div>
+    <div class="cell cell--art"><img src="/creatures/dragon-6.webp" alt="" /></div>
+    <div class="cell">1</div>
+    <div class="cell">9</div>
+    <div class="cell">8</div>
+    <div class="cell">4</div>
+  </div>
+
+  <div class="copy">
+    <h1>Sudoku<br /><span>Guardians</span></h1>
+    <p>Sudoku that shows you why —<br />not just what.</p>
+    <div class="pill">Raise a legendary guardian</div>
+  </div>
+</div>
