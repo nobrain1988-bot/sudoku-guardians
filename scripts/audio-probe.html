@@ -1,0 +1,51 @@
+<!doctype html>
+<!-- 개발용 검사 페이지. 타이틀 테마를 실제로 렌더링해서 소리가 나는지, 갈라지지는 않는지 숫자로 본다. -->
+<meta charset="utf-8" />
+<title>audio probe</title>
+<pre id="out">rendering…</pre>
+<script type="module">
+  const SECONDS = 4.5;
+  const RATE = 44100;
+
+  // Audio 클래스는 window.AudioContext 를 쓴다. 실시간 대신 오프라인으로 바꿔치기하면
+  // 스피커 없이도 파형을 통째로 받아 검사할 수 있다.
+  const offline = new OfflineAudioContext(2, RATE * SECONDS, RATE);
+  window.AudioContext = function () {
+    return offline;
+  };
+  window.webkitAudioContext = window.AudioContext;
+
+  const { Audio } = await import('/src/audio.js');
+  const a = new Audio();
+  a.musicOn = true;
+  a.sfxOn = true;
+  a.unlock();
+
+  const buf = await offline.startRendering();
+  const ch = buf.getChannelData(0);
+
+  let peak = 0;
+  let clipped = 0;
+  const slices = [];
+  const per = Math.floor(RATE * 0.5);
+  for (let s = 0; s * per < ch.length; s++) {
+    let sum = 0;
+    let p = 0;
+    for (let i = s * per; i < Math.min((s + 1) * per, ch.length); i++) {
+      const v = Math.abs(ch[i]);
+      sum += ch[i] * ch[i];
+      if (v > p) p = v;
+      if (v > peak) peak = v;
+      if (v >= 0.999) clipped++;
+    }
+    slices.push(`${(s * 0.5).toFixed(1)}s  rms ${Math.sqrt(sum / per).toFixed(3)}  peak ${p.toFixed(3)}`);
+  }
+
+  document.title = 'done';
+  document.getElementById('out').textContent = [
+    `peak   ${peak.toFixed(3)}   (1.000 이상이면 소리가 깨짐)`,
+    `clipped samples ${clipped}`,
+    '',
+    ...slices,
+  ].join('\n');
+</script>

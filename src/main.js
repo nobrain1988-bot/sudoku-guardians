@@ -1,4 +1,5 @@
 import './style.css';
+import { Capacitor } from '@capacitor/core';
 import { audio } from './audio.js';
 import { hideBanner, initAds, showBanner, showInterstitialOnExit, showRewarded } from './lib/ads.js';
 import { BOXES, PEERS, boxOf, colOf, rowOf } from './core/sudoku.js';
@@ -164,6 +165,9 @@ function show(view) {
   $$('[data-view]').forEach((el) => {
     el.hidden = el.dataset.view !== view;
   });
+  // 판을 푸는 동안에만 잔잔한 앰비언트로 내려간다. 나머지 화면(타이틀·홈·동료 선택·완료)은
+  // 웅장한 테마를 유지해서 '수호신을 키우는 앱'이라는 인상을 계속 끌고 간다.
+  audio.setScene(view === 'game' ? 'calm' : 'title');
   // 배너는 홈에만. 판·코치·완료 화면에는 절대 띄우지 않는다 —
   // 숫자판 옆 배너는 애드몹이 '권장하지 않는 구현'으로 직접 명시했고,
   // 적발되면 조치가 앱이 아니라 계정 단위로 떨어진다.
@@ -709,8 +713,58 @@ async function reviveWithAd() {
 
 /* ---------- events ---------- */
 
+// 폰의 뒤로가기 버튼. 기본 동작은 '앱 종료' 라서, 문제를 풀다 눌렀을 뿐인데
+// 앱이 꺼져 버린다. 화면 단계에 따라 한 칸씩 되돌아가게 하고,
+// 더 돌아갈 곳이 없는 타이틀에서만 종료한다.
+async function bindBackButton() {
+  if (!Capacitor.isNativePlatform()) return;
+  const { App } = await import('@capacitor/app');
+
+  App.addListener('backButton', () => {
+    // 덮여 있는 것부터 하나씩 닫는다 — 아래 순서가 화면에 쌓인 순서다.
+    if (!$('[data-over]').hidden) return; // 기회 소진 창은 선택을 해야 넘어간다
+    if (!$('[data-evolve]').hidden) {
+      $('[data-action="closeEvolve"]').click();
+      return;
+    }
+    if (state.view === 'game' && state.paused) {
+      $('[data-action="resumeTimer"]').click();
+      return;
+    }
+    if (state.view === 'game' && state.coach) {
+      closeCoach();
+      renderBoard();
+      return;
+    }
+
+    if (state.view === 'game') {
+      $('[data-action="home"]').click();
+      return;
+    }
+    if (state.view === 'win') {
+      $('[data-action="winExit"]').click();
+      return;
+    }
+    if (state.view === 'pick') {
+      // 동료를 아직 안 고른 사람은 홈으로 갈 수 없다. 타이틀로 돌린다.
+      show(readStats().creature ? 'home' : 'title');
+      return;
+    }
+    if (state.view === 'home') {
+      show('title');
+      return;
+    }
+    App.exitApp();
+  });
+}
+
 function bindEvents() {
+  // 앱(안드로이드) 안에서는 첫 화면부터 바로 음악을 연다 — MainActivity 에서
+  // 웹뷰의 '누르기 전엔 소리 금지' 제한을 풀어 뒀다. 브라우저에서는 그 제한을
+  // 풀 수 없으므로 첫 터치를 기다린다.
+  if (Capacitor.isNativePlatform()) audio.unlock();
   document.addEventListener('pointerdown', () => audio.unlock(), { once: true });
+  bindBackButton();
 
   $('[data-board]').addEventListener('click', (e) => {
     const cell = e.target.closest('[data-cell]');

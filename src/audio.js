@@ -28,6 +28,29 @@ const SFX = {
 const PENTATONIC = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21];
 const MELODY_ROOT = 261.63;
 
+// ── 타이틀 테마 ─────────────────────────────────────────────────────────────
+// 게임 중 음악과 성격이 정반대다. 판을 푸는 동안에는 방해가 되지 않아야 하지만,
+// 타이틀은 '수호신을 만나러 들어가는 순간'이라 오히려 끌어당겨야 한다.
+// 그래서 빠른 박자 + 저음 북 + 넓은 화음으로 간다.
+const BPM = 104;
+const BEAT = 60 / BPM;
+const semi = (n) => 2 ** (n / 12);
+
+// i - VI - III - VII (A단조). 웅장한 곡에서 가장 흔한 진행이고,
+// 마지막 화음이 다음 마디의 첫 화음으로 밀어 주기 때문에 루프가 끊겨 들리지 않는다.
+const TITLE_CHORDS = [
+  { root: -12, notes: [0, 3, 7, 12] },
+  { root: -17, notes: [0, 4, 7, 12] },
+  { root: -21, notes: [0, 4, 7, 12] },
+  { root: -14, notes: [0, 4, 7, 12] },
+];
+const TITLE_LEAD = [
+  [0, 12, 1.5], [1.5, 15, 1], [2.5, 14, 1.5],
+  [4, 12, 1], [5, 16, 1.5], [6.5, 14, 1.5],
+  [8, 19, 2], [10, 16, 1],
+  [12, 14, 1.5], [13.5, 12, 2.5],
+];
+
 export class Audio {
   #ctx = null;
   #master = null;
@@ -36,6 +59,8 @@ export class Audio {
   #music = null;
   #melodyTimer = null;
   #lastNote = -1;
+  #scene = 'title';
+  #sceneTimer = null;
 
   constructor() {
     this.sfxOn = localStorage.getItem('sc.sfx') !== 'off';
@@ -55,6 +80,7 @@ export class Audio {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     if (!Ctx) return;
     this.#ctx = new Ctx();
+    if (this.#ctx.state === 'suspended') this.#ctx.resume();
 
     this.#master = this.#ctx.createGain();
     this.#master.gain.value = 0.9;
@@ -66,7 +92,17 @@ export class Audio {
 
     this.#musicBus = this.#ctx.createGain();
     this.#musicBus.gain.value = 0;
-    this.#musicBus.connect(this.#master);
+
+    // 컴프레서 = 큰 소리만 눌러 주는 장치. 북·화음·선율이 한 박에 겹칠 때
+    // 소리가 갈라지는(클리핑) 걸 막아 주고, 덕분에 전체를 더 크게 밀 수 있다.
+    // 웅장함은 결국 '크게 들리는데 깨지지 않는' 상태다.
+    const glue = this.#ctx.createDynamicsCompressor();
+    glue.threshold.value = -18;
+    glue.knee.value = 12;
+    glue.ratio.value = 6;
+    glue.attack.value = 0.005;
+    glue.release.value = 0.16;
+    this.#musicBus.connect(glue).connect(this.#master);
 
     if (this.musicOn) this.#startMusic();
   }
@@ -121,8 +157,22 @@ export class Audio {
     param.linearRampToValueAtTime(value, now + seconds);
   }
 
+  // 어떤 음악을 틀지. 'title' = 웅장하고 빠른 테마, 'calm' = 판 푸는 동안의 앰비언트.
+  setScene(scene) {
+    if (this.#scene === scene) return;
+    this.#scene = scene;
+    if (!this.musicOn || !this.#ctx) return;
+    this.#stopMusic();
+    // 이전 곡이 사라지는 1.2초를 기다렸다가 새 곡을 올린다. 겹치면 탁해진다.
+    clearTimeout(this.#sceneTimer);
+    this.#sceneTimer = setTimeout(() => {
+      if (this.musicOn) this.#startMusic();
+    }, 1300);
+  }
+
   #startMusic() {
     if (this.#music || !this.#ctx) return;
+    if (this.#scene === 'title') return this.#startTitleTheme();
     const ctx = this.#ctx;
 
     const delay = ctx.createDelay(1);
@@ -195,6 +245,172 @@ export class Audio {
     osc.stop(at + 3.6);
   }
 
+  // 마디 하나를 통째로 예약한다. setInterval 로 음을 하나씩 찍으면 박자가 흔들린다 —
+  // 웹 오디오의 시계(currentTime)에 미리 걸어야 박이 맞는다.
+  #scheduleTitleBar(startAt, barIndex) {
+    const ctx = this.#ctx;
+    const music = this.#music;
+    if (!ctx || !music) return;
+    const chord = TITLE_CHORDS[barIndex % TITLE_CHORDS.length];
+    const barLen = BEAT * 4;
+
+    // 북 — 1박과 3박. 저음 사인의 음정을 떨어뜨려 '둥' 소리를 만든다.
+    for (const beat of [0, 2]) {
+      const at = startAt + beat * BEAT;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(110, at);
+      osc.frequency.exponentialRampToValueAtTime(42, at + 0.14);
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(beat === 0 ? 0.44 : 0.28, at + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.42);
+      osc.connect(gain).connect(music.drums);
+      osc.start(at);
+      osc.stop(at + 0.5);
+    }
+
+    // 베이스 — 8분음표로 달린다. 이게 속도감을 만든다.
+    for (let step = 0; step < 8; step++) {
+      const at = startAt + step * (BEAT / 2);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = MELODY_ROOT * semi(chord.root);
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(step % 2 === 0 ? 0.24 : 0.15, at + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + BEAT / 2 - 0.02);
+      osc.connect(gain).connect(music.bass);
+      osc.start(at);
+      osc.stop(at + BEAT / 2);
+    }
+
+    // 화음 — 마디 내내 깔린다. 톱니파를 로우패스로 깎아 현악기 결을 낸다.
+    // 웅장함은 북이 아니라 여기서 나온다. 북은 그 위에 박을 찍어 줄 뿐이다.
+    for (const step of chord.notes) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.value = MELODY_ROOT * semi(chord.root + step);
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.078, startAt + 0.22);
+      gain.gain.setValueAtTime(0.078, startAt + barLen - 0.3);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + barLen);
+      osc.connect(gain).connect(music.pad);
+      osc.start(startAt);
+      osc.stop(startAt + barLen + 0.05);
+    }
+
+    // 4마디마다 한 번, 시작에 쉭— 하고 올라오는 심벌. 잡음을 높은 쪽만 남겨 만든다.
+    // 반복되는 루프에 '여기서 한 바퀴가 시작된다'는 표시가 생겨 지루함이 줄어든다.
+    if (barIndex % 4 === 0) {
+      const len = Math.floor(ctx.sampleRate * 1.1);
+      const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 5200;
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0.0001, startAt);
+      gain.gain.exponentialRampToValueAtTime(0.09, startAt + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startAt + 1.0);
+      // 로우패스가 걸린 다른 갈래로 보내면 다 깎여 사라진다. 출력으로 바로 보낸다.
+      src.connect(hp).connect(gain).connect(music.out);
+      src.start(startAt);
+      src.stop(startAt + 1.1);
+    }
+  }
+
+  #scheduleTitleLead(startAt) {
+    const ctx = this.#ctx;
+    const music = this.#music;
+    for (const [beat, step, len] of TITLE_LEAD) {
+      const at = startAt + beat * BEAT;
+      const dur = len * BEAT;
+      // 같은 음을 한 옥타브 아래로 한 번 더 겹친다. 음정은 그대로인데 두께가 생긴다 —
+      // 영화 음악에서 금관이 뿔피리처럼 들리는 게 대부분 이 방식이다.
+      for (const [octave, level] of [[0, 0.14], [-12, 0.075]]) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = MELODY_ROOT * semi(step + octave);
+        gain.gain.setValueAtTime(0.0001, at);
+        gain.gain.exponentialRampToValueAtTime(level, at + 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+        osc.connect(gain).connect(music.lead);
+        osc.start(at);
+        osc.stop(at + dur + 0.05);
+      }
+    }
+  }
+
+  #startTitleTheme() {
+    const ctx = this.#ctx;
+
+    // 타이틀 곡은 두 마디 앞까지 미리 예약해 둔다. 그래서 곡을 멈출 때
+    // 이미 예약된 음들이 남는다 — 그것들을 한 번에 끊을 수 있도록
+    // 모든 소리를 out 한 곳으로 모아 놓는다.
+    const out = ctx.createGain();
+    out.gain.value = 1;
+    out.connect(this.#musicBus);
+
+    const mk = (cutoff, level) => {
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = cutoff;
+      const gain = ctx.createGain();
+      gain.gain.value = level;
+      filter.connect(gain).connect(out);
+      return filter;
+    };
+
+    // 짧은 지연을 되먹여 넓은 공간감을 만든다(진짜 리버브는 무겁다).
+    // 지연 시간을 8분음표에 맞춰 두면 메아리가 박자 위에 떨어져 곡을 밀어 준다.
+    const echo = ctx.createDelay(1);
+    echo.delayTime.value = BEAT / 2;
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.26;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.3;
+    echo.connect(feedback).connect(echo);
+    echo.connect(wet).connect(out);
+
+    const lead = mk(3400, 0.9);
+    lead.connect(echo);
+
+    this.#music = {
+      title: true,
+      out,
+      drums: mk(900, 1),
+      bass: mk(700, 1),
+      pad: mk(1600, 0.9),
+      lead,
+      bar: 0,
+      next: ctx.currentTime + 0.2,
+    };
+
+    this.#ramp(this.#musicBus.gain, 0.82, 1.4);
+
+    const barLen = BEAT * 4;
+    const pump = () => {
+      const m = this.#music;
+      if (!m || !m.title) return;
+      // 탭이 오래 가려져 있다 돌아온 경우 예약이 과거에 머물 수 있다. 현재로 당긴다.
+      if (m.next < ctx.currentTime) m.next = ctx.currentTime + 0.05;
+      while (m.next < ctx.currentTime + barLen * 2) {
+        this.#scheduleTitleBar(m.next, m.bar);
+        if (m.bar % 4 === 0) this.#scheduleTitleLead(m.next);
+        m.next += barLen;
+        m.bar++;
+      }
+    };
+    pump();
+    this.#melodyTimer = setInterval(pump, barLen * 500);
+  }
+
   #stopMusic() {
     if (!this.#music) return;
     const music = this.#music;
@@ -202,9 +418,13 @@ export class Audio {
     clearInterval(this.#melodyTimer);
     this.#melodyTimer = null;
     this.#ramp(this.#musicBus.gain, 0, 1.2);
+    if (music.title) this.#ramp(music.out.gain, 0, 1.2);
     setTimeout(() => {
-      music.drones.forEach((osc) => osc.stop());
-      music.breath.stop();
+      if (music.title) music.out.disconnect();
+      else {
+        music.drones.forEach((osc) => osc.stop());
+        music.breath.stop();
+      }
     }, 1400);
   }
 }
