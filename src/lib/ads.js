@@ -38,7 +38,7 @@ const TEST_IDS = {
 const REAL_IDS = {
   banner:       'ca-app-pub-9311950226943560/6326061114',
   interstitial: 'ca-app-pub-9311950226943560/1891992084',
-  reward:       '',
+  reward:       'ca-app-pub-9311950226943560/1927810204',
 }
 
 // 어느 쪽을 쓸지는 **빌드가 정한다. 사람이 고르지 않는다.**
