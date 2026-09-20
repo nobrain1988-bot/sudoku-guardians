@@ -30,7 +30,7 @@ Eight real sudoku techniques, explained the moment they matter:
 Last Number Left · Only One Spot · Locked in a Box · Locked in a Line · Matching Pair · Hidden Pair · Matching Triple · X-Wing
 
 RAISE A LEGENDARY GUARDIAN
-Choose a Golden Dragon, Phoenix, White Tiger, Griffin or Leviathan. It starts as an egg and grows every time you solve a puzzle — hatchling, juvenile, adolescent, adult, and finally its legendary form. Six hand-painted stages for each creature. Raise one to legend, then start the next.
+Choose a Golden Dragon, Phoenix, White Tiger, Griffin or Leviathan. It starts as an egg and grows every time you solve a puzzle — hatchling, juvenile, adolescent, adult, and finally its legendary form. Six illustrated stages for each creature. Raise one to legend, then start the next.
 
 BUILT TO BE EASY ON THE EYES
 Large numbers. High contrast. Big buttons. No clutter. Designed so you can play comfortably at night without squinting.
@@ -48,7 +48,7 @@ Every puzzle has exactly one solution and can always be solved by pure logic. Yo
 · English, Korean and Japanese
 
 WORKS ANYWHERE
-Fully offline. No account, no sign-up, no internet needed. Your progress stays on your device.
+Puzzles are generated right on your device, so you can play with no connection at all. No account, no sign-up. Your progress stays on your device.
 
 Made for anyone who wants to get genuinely better at sudoku — not just finish another grid.
 ```
