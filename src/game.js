@@ -161,15 +161,15 @@ export class Game {
     return Math.max(0, MAX_MISTAKES + this.granted - this.mistakes);
   }
 
-  // 광고를 보면 기회를 딱 하나 준다.
+  // 광고를 보면 기회를 딱 하나 준다. 한 판에 한 번뿐이다.
   //
   // 실수 횟수(mistakes)는 건드리지 않고 기회 한도만 늘린다. 예전처럼 실수를 0으로
   // 되돌리면 광고 한 번에 점수까지 깨끗해져서, 광고가 '실수를 지우는 버튼' 이 된다.
-  // 이제는 몇 번을 이어 해도 실수는 그대로 쌓이므로 점수가 계속 깎인다 —
-  // 긴장을 '더 못 함' 이 아니라 '점수가 낮아짐' 으로 잡는다.
+  // 이제는 되살아나도 실수가 그대로 남아 점수에 반영된다.
   revive() {
-    this.granted += 1;
+    if (this.revived) return false;
     this.revived = true;
+    this.granted += 1;
     return true;
   }
 
