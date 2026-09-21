@@ -690,8 +690,9 @@ function pressDigit(digit) {
 
 function openOutOfChances() {
   const over = $('[data-over]');
-  // 광고를 이미 한 번 쓴 판이면 되살리기를 제안하지 않는다 — 판당 한 번뿐이다.
-  $('[data-action="reviveAd"]').hidden = state.game.revived;
+  // 광고 한 번에 기회 하나. 몇 번이든 이어 할 수 있지만 실수는 그대로 쌓여
+  // 점수가 계속 깎이므로, 무한 부활이 되지는 않는다.
+  $('[data-action="reviveAd"]').hidden = false;
   over.hidden = false;
   state.paused = true;
   audio.play('wrong');

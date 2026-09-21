@@ -56,6 +56,7 @@ export class Game {
     this.hints = data.hints ?? 0;
     this.elapsed = data.elapsed ?? 0;
     this.revived = data.revived ?? false;
+    this.granted = data.granted ?? 0;
     this.practice = data.practice ?? false;
     this.history = [];
     this.selected = null;
@@ -157,14 +158,18 @@ export class Game {
   }
 
   chancesLeft() {
-    return Math.max(0, MAX_MISTAKES - this.mistakes);
+    return Math.max(0, MAX_MISTAKES + this.granted - this.mistakes);
   }
 
-  // 광고를 보고 기회를 되찾는다. 판당 한 번뿐 — 무한 부활이면 긴장이 사라진다.
+  // 광고를 보면 기회를 딱 하나 준다.
+  //
+  // 실수 횟수(mistakes)는 건드리지 않고 기회 한도만 늘린다. 예전처럼 실수를 0으로
+  // 되돌리면 광고 한 번에 점수까지 깨끗해져서, 광고가 '실수를 지우는 버튼' 이 된다.
+  // 이제는 몇 번을 이어 해도 실수는 그대로 쌓이므로 점수가 계속 깎인다 —
+  // 긴장을 '더 못 함' 이 아니라 '점수가 낮아짐' 으로 잡는다.
   revive() {
-    if (this.revived) return false;
+    this.granted += 1;
     this.revived = true;
-    this.mistakes = 0;
     return true;
   }
 
@@ -195,6 +200,7 @@ export class Game {
       hints: this.hints,
       elapsed: this.elapsed,
       revived: this.revived,
+      granted: this.granted,
       practice: this.practice,
     };
   }
