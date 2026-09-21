@@ -25,6 +25,24 @@ $25 결제·D-U-N-S·신원인증이 끝나 있습니다. **테스터 12명 / 14
 
 ---
 
+## 현재 상태 — 2026-09-21 프로덕션 심사 제출 완료 ✅
+
+| | |
+|---|---|
+| 제출 빌드 | Actions #5 · 커밋  · versionCode 1005 |
+| 출시 국가 | 176개 (전체) |
+| 타겟 연령대 | 만 13세 이상 (9-12세 미체크 — 패밀리 정책 회피) |
+| 기본 등록 언어 | 영어(미국) |
+| 관리형 게시 | 꺼짐 → 심사 통과 시 자동 공개 |
+| 결과 통보 | sidlee2741@gmail.com |
+
+**심사 통과 후에 할 일은 H단계**를 보세요. 그 전까지는 기다리는 것 말고 할 일이 없습니다.
+
+> versionCode 는 워크플로가  로 자동 계산한다(android-release.yml).
+> build.gradle 의 값은 빌드 때 덮어써지므로 손으로 올릴 필요가 없다.
+
+---
+
 ## A단계 — 정식 AAB 새로 굽고 내려받기 🔴
 
 **어디서**: https://github.com/nobrain1988-bot/sudoku-guardians/actions/workflows/android-release.yml
