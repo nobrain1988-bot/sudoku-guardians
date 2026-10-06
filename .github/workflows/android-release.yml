@@ -7,13 +7,21 @@ name: Android AAB (플레이 업로드용)
 #    (캐시는 7일간 안 쓰면 삭제된다 → 다음 빌드 때 다른 키가 생겨 플레이가 업로드를 거부한다)
 #
 # 처음 한 번만 하는 절차:
-#   1) Secret 에 SUDOKU_KEYSTORE_PASSWORD 를 먼저 넣는다 (직접 정한 비밀번호)
-#   2) 이 워크플로를 실행한다 → 키가 자동 생성되고 Artifacts 에 올라온다
-#   3) sudoku-upload-keystore-DO-NOT-LOSE 를 내려받아 안전한 곳에 보관한다
-#   4) 로그에 찍힌 base64 문자열을 복사해 Secret 에 SUDOKU_KEYSTORE_BASE64 로 저장한다
-#   5) 이후부터는 매번 그 Secret 에서 같은 키를 복원해 쓴다
+#   1) 저장소를 '비공개' 로 바꾼다  ← 이게 빠지면 아래 2,4번에서 키가 전 세계에 공개된다
+#   2) Secret 에 SUDOKU_KEYSTORE_PASSWORD 를 넣는다 (직접 정한 비밀번호)
+#   3) Run workflow 에서 '업로드 키를 새로 만든다' 를 켜고 실행한다
+#   4) sudoku-upload-keystore-DO-NOT-LOSE 를 내려받아 안전한 곳에 보관한다
+#   5) 로그의 base64 를 Secret 에 SUDOKU_KEYSTORE_BASE64 로 저장한다
+#   6) 그 실행 기록(run)을 삭제한다 — 로그와 아티팩트가 함께 지워진다
+#   7) 그제서야 저장소를 공개로 되돌린다
+#   8) 이후부터는 Secret 에서 같은 키를 복원해 쓴다 (생성 단계는 돌지 않는다)
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      generate_keystore:
+        description: '업로드 키를 새로 만든다 (저장소가 비공개일 때만!). 평소에는 끈 채로 둘 것'
+        type: boolean
+        default: false
 
 jobs:
   build-aab:
@@ -79,6 +87,12 @@ jobs:
             echo "$UPLOAD_KEYSTORE_BASE64" | base64 -d > "$SUDOKU_KEYSTORE_PATH"
             echo "Secret 에서 업로드 키 복원 완료"
             echo "created=false" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.generate_keystore }}" != "true" ]; then
+            echo "::error::Secret SUDOKU_KEYSTORE_BASE64 가 없습니다."
+            echo "키를 새로 만들려면 (1) 저장소를 비공개로 바꾸고,"
+            echo "(2) Run workflow 에서 '업로드 키를 새로 만든다' 를 켜고 실행하세요."
+            echo "공개 저장소에서 키를 만들면 앱 서명키가 전 세계에 공개됩니다."
+            exit 1
           else
             keytool -genkeypair -v -keystore "$SUDOKU_KEYSTORE_PATH" \
               -alias "$SUDOKU_KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
@@ -126,7 +140,9 @@ jobs:
       - name: 업로드 키 백업 (새로 만든 경우에만)
         if: steps.keystore.outputs.created == 'true'
         uses: actions/upload-artifact@v5
+        # 하루만 남긴다. 받아서 보관한 뒤에도 계속 떠 있으면 그게 유출 통로가 된다.
         with:
+          retention-days: 1
           name: sudoku-upload-keystore-DO-NOT-LOSE
           path: /home/runner/.sudoku/upload-keystore.jks
           if-no-files-found: error
